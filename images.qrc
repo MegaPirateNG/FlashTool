@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>resources/copter-heli.png</file>
+        <file>resources/copter-hexa.png</file>
+        <file>resources/copter-octox.png</file>
+        <file>resources/copter-quad.png</file>
+        <file>resources/copter-tri.png</file>
+        <file>resources/copter-x8.png</file>
+        <file>resources/copter-y6.png</file>
+        <file>resources/logo.png</file>
+        <file>resources/plane.png</file>
+        <file>resources/rover.png</file>
+    </qresource>
+</RCC>
