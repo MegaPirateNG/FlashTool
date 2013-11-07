@@ -288,7 +288,7 @@ void MainWindow::startFlash()
     if (!ui->cmbSerialPort->isEnabled())
     {
         QMessageBox::critical(this, tr("FlashTool"), tr("No serial port found, please make sure you connected your board via usb."));
-        //return;
+        return;
     }
 
     if (!ui->cmbVersion->isEnabled())
