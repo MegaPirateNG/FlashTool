@@ -13,7 +13,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = flashTool
 TEMPLATE = app
 
-FLASHTOOL_PATH_URI = http://....
+FLASHTOOL_PATH_URI = http://tobedefined/update.xml
 
 DEFINES += FLASHTOOL_PATH_URI=\\\"$$FLASHTOOL_PATH_URI\\\"
 
@@ -24,8 +24,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     progressdialog.h
 
-FORMS    += mainwindow.ui \
-    progressdialog.ui
+FORMS    += mainwindow.ui
 
 RESOURCES += \
     images.qrc

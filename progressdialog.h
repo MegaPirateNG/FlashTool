@@ -1,7 +1,7 @@
 #ifndef PROGRESSDIALOG_H
 #define PROGRESSDIALOG_H
 
-#include <QDialog>
+#include <QProgressDialog>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -22,11 +22,7 @@ struct Download
 };
 typedef QList<Download> DownloadsList;
 
-namespace Ui {
-class ProgressDialog;
-}
-
-class ProgressDialog : public QDialog
+class ProgressDialog : public QProgressDialog
 {
     Q_OBJECT
 
@@ -34,11 +30,8 @@ signals:
      void downloadsFinished(DownloadsList downloads);
 
 public:
-    explicit ProgressDialog(QWidget *parent = 0);
-    void prepare(QString status, bool allowCancel);
     void startDownloads(DownloadsList downloads);
     void startDownloads(Download download);
-    ~ProgressDialog();
 
 private slots:
     void networkReplyFinished(QNetworkReply*);
@@ -46,7 +39,6 @@ private slots:
     void networkReplyTimedOut();
 
 private:
-    Ui::ProgressDialog *ui;
     QTimer *m_downloadRequestTimeout;
     QNetworkAccessManager *m_networkManager;
     QNetworkReply *m_networkRequest;

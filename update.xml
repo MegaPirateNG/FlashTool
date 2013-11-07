@@ -1,34 +1,58 @@
 <xml>
+	<settings hexurl="http://tobedefined/hex/" hexnamepattern="%board%_%rcinput%_%rcmapping%_%gpstype%_%gpsbaud%_%platform%_%version%.hex"/>
+	
 	<boards>
-		<board name="RCTimer CRIUS V2" patch="" id="crius2"/>
-		<board name="RCTimer CRIUS V1 / Hobbyking AIOP boards" patch="" id="crius1"/>
-		<board name="Hobbyking Red MultiWii Pro" patch="" id="hk_red"/>
-		<board name="BlackVortex" patch="" id="blackvortex"/>
+		<board name="RCTimer CRIUS V2" id="crius2"/>
+		<board name="RCTimer CRIUS V1 / Hobbyking AIOP boards" id="crius1"/>
+		<board name="Hobbyking Red MultiWii Pro" id="hk_red"/>
+		<board name="BlackVortex" id="blackvortex"/>
 	</boards>
 
 	<rcinputs>
-		<rcinput name="PPM on A8" patch="" id="ppma8"/>
-		<rcinput name="PPM on PL1" patch="" id="ppmpl1"/>
-		<rcinput name="Regular PWM on A8-A15" patch="" id="pwma8"/>
+		<rcinput name="PPM on A8" id="ppma8"/>
+		<rcinput name="PPM on PL1" id="ppmpl1"/>
+		<rcinput name="Regular PWM on A8-A15" id="pwma8"/>
+		
+		<rcmapping name="Default" id="default"/>
+		<rcmapping name="Graupner / Spektrum" id="graupner_spektrum"/>
+		<rcmapping name="Hitec / Sanwa / others" id="hitec_sanwa"/>
+		<rcmapping name="Multiwii" id="multiwii"/>
+		<rcmapping name="JR" id="jr"/>
 	</rcinputs>
-	
+
 	<platforms>
-		<platform name="APM:Copter - Quad" version="copter" patch="" image="copter-quad.png" id="copter-quad"/>
-		<platform name="APM:Copter - Tri" version="copter" patch="" image="copter-tri.png" id="copter-tri"/>
-		<platform name="APM:Copter - Hexa" version="copter" patch="" image="copter-hexa.png" id="copter-hexa"/>
-		<platform name="APM:Copter - Y6" version="copter" patch="" image="copter-y6.png" id="copter-y6"/>
-		<platform name="APM:Copter - Octocopter" version="copter" patch="" image="copter-octox.png" id="copter-octox"/>
-		<platform name="APM:Copter - X8" version="copter" patch="" image="copter-x8.png" id="copter-x8"/>
-		<platform name="APM:Copter - Helicopter" version="copter" patch="" image="copter-heli.png" id="copter-heli"/>
-		<platform name="APM:Plane" version="plane" patch="" image="plane.png" id="plane"/>
-		<platform name="APM:Rover" version="rover" patch="" image="rover.png" id="rover"/>
+		<platform name="APM:Copter - Quad" version="copter" image="copter-quad.png" id="copter-quad"/>
+		<platform name="APM:Copter - Tri" version="copter" image="copter-tri.png" id="copter-tri"/>
+		<platform name="APM:Copter - Hexa" version="copter" image="copter-hexa.png" id="copter-hexa"/>
+		<platform name="APM:Copter - Y6" version="copter" image="copter-y6.png" id="copter-y6"/>
+		<platform name="APM:Copter - Octocopter" version="copter" image="copter-octox.png" id="copter-octox"/>
+		<platform name="APM:Copter - X8" version="copter" image="copter-x8.png" id="copter-x8"/>
+		<platform name="APM:Copter - Helicopter" version="copter" image="copter-heli.png" id="copter-heli"/>
+		<platform name="APM:Plane" version="plane" image="plane.png" id="plane"/>
+		<platform name="APM:Rover" version="rover" image="rover.png" id="rover"/>
 	</platforms>
 	
+	<gps>
+		<gpstype name="Auto detect" id="default"/>
+		<gpstype name="None" id="none"/>
+		<gpstype name="NMEA" id="nmea"/>
+		<gpstype name="SIRF" id="sirf"/>
+		<gpstype name="UBLOX" id="ublox"/>
+		<gpstype name="IMU" id="imu"/>
+		<gpstype name="MTK" id="mtk"/>
+		<gpstype name="HIL" id="hil"/>
+		<gpstype name="MTK19" id="mtk19"/>
+		
+		<gpsbaud name="38400" id="38400"/>
+		<gpsbaud name="57600" id="57600"/>
+		<gpsbaud name="115200" id="115200"/>
+	</gps>
+	
 	<versions>
-		<version platform="copter" number="3.0.1-RC3" source="https://github.com/MegaPirateNG/ardupilot-mpng/archive/mpng-3.0.1-r3.zip" id="copter-3.0.1-rc3"/>
-		<version platform="plane" number="2.74b" source="https://github.com/smurfy/ardupilot-mpng/archive/mpng_ArduPlane-2.74b.zip" id="plane-2.74b"/>
-		<version platform="plane" number="2.75" source="https://github.com/smurfy/ardupilot-mpng/archive/mpng_ArduPlane-2.75.zip" id="plane-2.75"/>
-		<version platform="plane" number="2.76" source="https://github.com/smurfy/ardupilot-mpng/archive/mpng_ArduPlane-2.76.zip" id="plane-2.76"/>
+		<version platform="copter" number="3.0.1-RC3" id="3.0.1-rc3"/>
+		<version platform="plane" number="2.74b" id="2.74b"/>
+		<version platform="plane" number="2.75" id="2.75"/>
+		<version platform="plane" number="2.76" id="2.76"/>
 	</versions>
 
 </xml>

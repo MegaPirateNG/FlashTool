@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
     this->m_progressDialog = new ProgressDialog();
+    this->m_progressDialog->setWindowModality(Qt::ApplicationModal);
+    this->m_progressDialog->setWindowFlags(this->m_progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
+
     this->m_settings = new QSettings("MegaPirateNG", "FlashTool");
 
     connect(ui->btnSerialRefresh, SIGNAL(clicked()), SLOT(updateSerialPorts()));
@@ -21,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::updateConfigs()
 {
     connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(parseConfigs(DownloadsList)));
-    this->m_progressDialog->prepare("Updating available firmwares...", false);
+    this->m_progressDialog->setLabelText(tr("Updating available firmwares..."));
     this->m_progressDialog->show();
     this->m_progressDialog->startDownloads(Download(FLASHTOOL_PATH_URI));
 }
@@ -30,21 +33,33 @@ void MainWindow::parseConfigs(DownloadsList downloads)
 {
     Download download = downloads[0];
 
+    if (!download.success) {
+        QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware informations, try again later."));
+
+        QFile::remove(download.tmpFile);
+
+        QApplication::exit();
+        return;
+    }
+
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(parseConfigs(DownloadsList)));
 
-    if (!download.success) {
-        QApplication::exit();
-    }
 
     QString oldBoardType = this->m_settings->value("BoardType").toString();
     QString oldRCInput = this->m_settings->value("RCInput").toString();
+    QString oldRCInputMapping = this->m_settings->value("RCInputMapping").toString();
     QString oldPlatform = this->m_settings->value("Platform").toString();
+    QString oldGpsType = this->m_settings->value("GpsType").toString();
+    QString oldGpsBaud = this->m_settings->value("GpsBaud").toString();
 
     int oldBoardTypeIndex = 0;
     int oldRCInputIndex = 0;
+    int oldRCInputMappingIndex = 0;
     int oldPlatformIndex = 0;
+    int oldGpsTypeIndex = 0;
+    int oldGpsBaudIndex = 0;
 
-    this->m_progressDialog->prepare("Checking available firmwares...", false);
+    this->m_progressDialog->setLabelText(tr("Checking available firmwares..."));
 
     QFile *file = new QFile(download.tmpFile);
     file->open(QIODevice::ReadOnly | QIODevice::Text);
@@ -54,6 +69,12 @@ void MainWindow::parseConfigs(DownloadsList downloads)
     while (!xml.atEnd()) {
         xml.readNext();
 
+        //Settings
+        if (xml.isStartElement() && (xml.name() == "settings")) {
+            this->m_globalsettings.hexnamepattern = xml.attributes().value("hexnamepattern").toString().simplified();
+            this->m_globalsettings.hexurl = xml.attributes().value("hexurl").toString().simplified();
+        }
+
         //Boards
         if (xml.isStartElement() && (xml.name() == "boards")) {
             ui->cmbBoardType->clear();
@@ -62,7 +83,6 @@ void MainWindow::parseConfigs(DownloadsList downloads)
                 if (xml.isStartElement() && (xml.name() == "board")) {
                     BoardType board;
                     board.name = xml.attributes().value("name").toString().simplified();
-                    board.patch = xml.attributes().value("patch").toString().simplified();
                     board.id = xml.attributes().value("id").toString().simplified();
 
                     if (board.id == oldBoardType) {
@@ -78,15 +98,16 @@ void MainWindow::parseConfigs(DownloadsList downloads)
                 }
             }
         }
+
         //RC Inputs
         if (xml.isStartElement() && (xml.name() == "rcinputs")) {
             ui->cmbRCType->clear();
+            ui->cmbRCMapping->clear();
             while (!xml.atEnd()) {
                 xml.readNext();
                 if (xml.isStartElement() && (xml.name() == "rcinput")) {
                     RCInput input;
                     input.name = xml.attributes().value("name").toString().simplified();
-                    input.patch = xml.attributes().value("patch").toString().simplified();
                     input.id = xml.attributes().value("id").toString().simplified();
 
                     if (input.id == oldRCInput) {
@@ -96,6 +117,19 @@ void MainWindow::parseConfigs(DownloadsList downloads)
                     QVariant vInput;
                     vInput.setValue<RCInput>(input);
                     ui->cmbRCType->addItem(input.name, vInput);
+                }
+                if (xml.isStartElement() && (xml.name() == "rcmapping")) {
+                    RCInputMapping input;
+                    input.name = xml.attributes().value("name").toString().simplified();
+                    input.id = xml.attributes().value("id").toString().simplified();
+
+                    if (input.id == oldRCInputMapping) {
+                        oldRCInputMappingIndex = ui->cmbRCMapping->count();
+                    }
+
+                    QVariant vInput;
+                    vInput.setValue<RCInputMapping>(input);
+                    ui->cmbRCMapping->addItem(input.name, vInput);
                 }
                 if (xml.isEndElement() && (xml.name() == "rcinputs")) {
                     break;
@@ -111,7 +145,6 @@ void MainWindow::parseConfigs(DownloadsList downloads)
                 if (xml.isStartElement() && (xml.name() == "platform")) {
                     Platform platform;
                     platform.name = xml.attributes().value("name").toString().simplified();
-                    platform.patch = xml.attributes().value("patch").toString().simplified();
                     platform.id = xml.attributes().value("id").toString().simplified();
                     platform.image = xml.attributes().value("image").toString().simplified();
                     platform.version = xml.attributes().value("version").toString().simplified();
@@ -130,6 +163,44 @@ void MainWindow::parseConfigs(DownloadsList downloads)
             }
         }
 
+        //GPS
+        if (xml.isStartElement() && (xml.name() == "gps")) {
+            ui->cmbGpsType->clear();
+            ui->cmbGpsBaud->clear();
+            while (!xml.atEnd()) {
+                xml.readNext();
+                if (xml.isStartElement() && (xml.name() == "gpstype")) {
+                    GpsType gpstype;
+                    gpstype.name = xml.attributes().value("name").toString().simplified();
+                    gpstype.id = xml.attributes().value("id").toString().simplified();
+
+                    if (gpstype.id == oldGpsType) {
+                        oldGpsTypeIndex = ui->cmbGpsType->count();
+                    }
+
+                    QVariant vGpsType;
+                    vGpsType.setValue<GpsType>(gpstype);
+                    ui->cmbGpsType->addItem(gpstype.name, vGpsType);
+                }
+                if (xml.isStartElement() && (xml.name() == "gpsbaud")) {
+                    GpsBaudrate gpsbaud;
+                    gpsbaud.name = xml.attributes().value("name").toString().simplified();
+                    gpsbaud.id = xml.attributes().value("id").toString().simplified();
+
+                    if (gpsbaud.id == oldGpsBaud) {
+                        oldGpsBaudIndex = ui->cmbGpsBaud->count();
+                    }
+
+                    QVariant vGpsBaud;
+                    vGpsBaud.setValue<GpsBaudrate>(gpsbaud);
+                    ui->cmbGpsBaud->addItem(gpsbaud.name, vGpsBaud);
+                }
+                if (xml.isEndElement() && (xml.name() == "gps")) {
+                    break;
+                }
+            }
+        }
+
         //Versions
         if (xml.isStartElement() && (xml.name() == "versions")) {
             this->m_versionList.clear();
@@ -139,7 +210,6 @@ void MainWindow::parseConfigs(DownloadsList downloads)
                     Version version;
                     version.number = xml.attributes().value("number").toString().simplified();
                     version.id = xml.attributes().value("id").toString().simplified();
-                    version.source = xml.attributes().value("source").toString().simplified();
                     version.platform = xml.attributes().value("platform").toString().simplified();
                     this->m_versionList<<version;
                 }
@@ -156,7 +226,10 @@ void MainWindow::parseConfigs(DownloadsList downloads)
     //Now set old values if they still exists
     ui->cmbBoardType->setCurrentIndex(oldBoardTypeIndex);
     ui->cmbRCType->setCurrentIndex(oldRCInputIndex);
+    ui->cmbRCMapping->setCurrentIndex(oldRCInputMappingIndex);
     ui->cmbPlatform->setCurrentIndex(oldPlatformIndex);
+    ui->cmbGpsBaud->setCurrentIndex(oldGpsBaudIndex);
+    ui->cmbGpsType->setCurrentIndex(oldGpsTypeIndex);
     this->platformChanged(ui->cmbPlatform->currentIndex());
     this->m_progressDialog->hide();
 }
@@ -174,7 +247,7 @@ void MainWindow::updateSerialPorts()
     if (ui->cmbSerialPort->count() == 0)
     {
         ui->cmbSerialPort->setDisabled(true);
-        ui->cmbSerialPort->addItem("- no serial port found -");
+        ui->cmbSerialPort->addItem(tr("- no serial port found -"));
     }
 }
 
@@ -204,7 +277,7 @@ void MainWindow::platformChanged(int index)
     if (ui->cmbVersion->count() == 0)
     {
         ui->cmbVersion->setDisabled(true);
-        ui->cmbVersion->addItem("- no flashable version found -");
+        ui->cmbVersion->addItem(tr("- no flashable version found -"));
     } else {
         ui->cmbVersion->setCurrentIndex(oldVersionIndex);
     }
@@ -212,43 +285,53 @@ void MainWindow::platformChanged(int index)
 
 void MainWindow::startFlash()
 {
-    if (ui->cmbSerialPort->count() == 0)
+    if (!ui->cmbSerialPort->isEnabled())
     {
-        return;
+        QMessageBox::critical(this, tr("FlashTool"), tr("No serial port found, please make sure you connected your board via usb."));
+        //return;
     }
 
-    if (ui->cmbVersion->count() == 0)
+    if (!ui->cmbVersion->isEnabled())
     {
+        QMessageBox::critical(this, tr("FlashTool"), tr("No flashable version found."));
         return;
     }
 
     BoardType board = ui->cmbBoardType->itemData(ui->cmbBoardType->currentIndex()).value<BoardType>();
     RCInput rcinput = ui->cmbRCType->itemData(ui->cmbRCType->currentIndex()).value<RCInput>();
+    RCInputMapping rcinputmapping = ui->cmbRCMapping->itemData(ui->cmbRCMapping->currentIndex()).value<RCInputMapping>();
     Platform platform = ui->cmbPlatform->itemData(ui->cmbPlatform->currentIndex()).value<Platform>();
     Version version = ui->cmbVersion->itemData(ui->cmbVersion->currentIndex()).value<Version>();
+    GpsType gpstype = ui->cmbGpsType->itemData(ui->cmbGpsType->currentIndex()).value<GpsType>();
+    GpsBaudrate gpsbaud = ui->cmbGpsBaud->itemData(ui->cmbGpsBaud->currentIndex()).value<GpsBaudrate>();
 
     connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(prepareSourceCode(DownloadsList)));
-    this->m_progressDialog->prepare("Downloading firmware " + platform.name + " (" + version.number + ") ...", true);
+    this->m_progressDialog->setLabelText((tr("Downloading firmware %1 (%2) ...").arg(platform.name).arg(version.number)));
     this->m_progressDialog->show();
 
-    DownloadsList downloads;
-    downloads<<Download(version.source);
+    QString hexname = this->m_globalsettings.hexnamepattern;
+    QString url = this->m_globalsettings.hexurl;
 
-    if (!board.patch.isEmpty()) {
-        downloads<<Download(board.patch);
-    }
-    if (!rcinput.patch.isEmpty()) {
-        downloads<<Download(rcinput.patch);
-    }
-    if (!platform.patch.isEmpty()) {
-        downloads<<Download(platform.patch);
-    }
-    this->m_progressDialog->startDownloads(downloads);
+    hexname.replace("%board%", board.id);
+    hexname.replace("%rcinput%", rcinput.id);
+    hexname.replace("%rcmapping%", rcinputmapping.id);
+    hexname.replace("%platform%", platform.id);
+    hexname.replace("%version%", version.id);
+    hexname.replace("%gpstype%", gpstype.id);
+    hexname.replace("%gpsbaud%", gpsbaud.id);
+
+    this->m_progressDialog->startDownloads(Download(url + hexname));
 }
 
 void MainWindow::prepareSourceCode(DownloadsList downloads)
 {
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(prepareSourceCode(DownloadsList)));
+
+    if (!downloads[0].success) {
+        QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware, try again later."));
+    } else {
+        //Flashing logic
+    }
 
     //This is just until the flashing itself is finished
     for (int i = 0; i < downloads.count(); i++) {
@@ -262,13 +345,19 @@ MainWindow::~MainWindow()
 {
     BoardType board = ui->cmbBoardType->itemData(ui->cmbBoardType->currentIndex()).value<BoardType>();
     RCInput rcinput = ui->cmbRCType->itemData(ui->cmbRCType->currentIndex()).value<RCInput>();
+    RCInputMapping rcinputmapping = ui->cmbRCMapping->itemData(ui->cmbRCMapping->currentIndex()).value<RCInputMapping>();
     Platform platform = ui->cmbPlatform->itemData(ui->cmbPlatform->currentIndex()).value<Platform>();
     Version version = ui->cmbVersion->itemData(ui->cmbVersion->currentIndex()).value<Version>();
+    GpsType gpstype = ui->cmbGpsType->itemData(ui->cmbGpsType->currentIndex()).value<GpsType>();
+    GpsBaudrate gpsbaud = ui->cmbGpsBaud->itemData(ui->cmbGpsBaud->currentIndex()).value<GpsBaudrate>();
 
     this->m_settings->setValue("BoardType", board.id);
     this->m_settings->setValue("RCInput", rcinput.id);
+    this->m_settings->setValue("RCInputMapping", rcinputmapping.id);
     this->m_settings->setValue("Platform", platform.id);
     this->m_settings->setValue("Version", version.id);
+    this->m_settings->setValue("GpsType", gpstype.id);
+    this->m_settings->setValue("GpsBaud", gpsbaud.id);
 
     delete ui;
 }

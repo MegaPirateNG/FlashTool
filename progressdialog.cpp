@@ -1,31 +1,6 @@
 #include "progressdialog.h"
 #include "ui_progressdialog.h"
 
-ProgressDialog::ProgressDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ProgressDialog)
-{
-    ui->setupUi(this);
-    this->setFixedSize(this->geometry().width(),this->geometry().height());
-
-    this->m_networkManager = new QNetworkAccessManager(this);
-    connect(this->m_networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyFinished(QNetworkReply*)));
-
-    this->m_downloadRequestTimeout = new QTimer();
-    connect(m_downloadRequestTimeout, SIGNAL(timeout()), this, SLOT(networkReplyTimedOut()));
-}
-
-ProgressDialog::~ProgressDialog()
-{
-    delete ui;
-}
-
-void ProgressDialog::prepare(QString status, bool allowCancel)
-{
-    ui->lblStatus->setText(status);
-    ui->btnCancel->setDisabled(!allowCancel);
-}
-
 void ProgressDialog::startDownloads(Download download)
 {
     DownloadsList downloads;
@@ -35,6 +10,16 @@ void ProgressDialog::startDownloads(Download download)
 
 void ProgressDialog::startDownloads(DownloadsList downloads)
 {
+    if (this->m_networkManager == NULL) {
+        this->m_networkManager = new QNetworkAccessManager(this);
+        connect(this->m_networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyFinished(QNetworkReply*)));
+    }
+
+    if (this->m_downloadRequestTimeout == NULL) {
+        this->m_downloadRequestTimeout = new QTimer();
+        connect(m_downloadRequestTimeout, SIGNAL(timeout()), this, SLOT(networkReplyTimedOut()));
+    }
+
     this->m_downloads = downloads;
     if (this->m_downloads.count() > 0) {
         this->m_downloadsIndex = 0;
@@ -44,6 +29,8 @@ void ProgressDialog::startDownloads(DownloadsList downloads)
 
 void ProgressDialog::doUrlDownload(QString url)
 {
+    this->setMaximum(100);
+    this->setValue(1);
     QNetworkRequest request;
     request.setUrl(url);
     request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0");
@@ -57,7 +44,7 @@ void ProgressDialog::networkReplyTimedOut()
 {
     this->m_downloadRequestTimeout->stop();
     this->m_networkRequest->abort();
-    qDebug()<<"TIMEOUT HANDLING TODO";
+    this->cancel();
 }
 
 void ProgressDialog::networkReplyFinished(QNetworkReply *networkReply)
@@ -78,7 +65,7 @@ void ProgressDialog::networkReplyFinished(QNetworkReply *networkReply)
     }
     file->close();
     this->m_downloads[this->m_downloadsIndex].tmpFile = filename;
-    this->m_downloads[this->m_downloadsIndex].success = true;
+    this->m_downloads[this->m_downloadsIndex].success = (networkReply->error() == QNetworkReply::NoError);
 
     this->m_downloadsIndex++;
     if (this->m_downloads.count() > this->m_downloadsIndex) {
@@ -90,8 +77,8 @@ void ProgressDialog::networkReplyFinished(QNetworkReply *networkReply)
 
 void ProgressDialog::networkReplyDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
-    ui->barProgress->setMaximum(bytesTotal);
-    ui->barProgress->setValue(bytesReceived);
+    this->setMaximum(bytesTotal);
+    this->setValue(bytesReceived);
     this->m_downloadRequestTimeout->stop();
     this->m_downloadRequestTimeout->start(30000);
 }
