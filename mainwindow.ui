@@ -58,9 +58,9 @@
    <widget class="QComboBox" name="cmbBoardType">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>10</y>
-      <width>461</width>
+      <x>180</x>
+      <y>20</y>
+      <width>431</width>
       <height>22</height>
      </rect>
     </property>
@@ -69,7 +69,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>10</y>
+      <y>20</y>
       <width>71</width>
       <height>16</height>
      </rect>
@@ -94,7 +94,7 @@
    <widget class="QComboBox" name="cmbRCType">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>180</x>
       <y>50</y>
       <width>211</width>
       <height>22</height>
@@ -235,9 +235,9 @@
    <widget class="QComboBox" name="cmbRCMapping">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>400</x>
       <y>50</y>
-      <width>241</width>
+      <width>211</width>
       <height>22</height>
      </rect>
     </property>

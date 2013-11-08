@@ -4,7 +4,9 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    a.setApplicationName("MegaPirateNG - FlashTool");
+    a.setOrganizationName("MegaPirateNG");
+    a.setOrganizationDomain("megapirateng.com");
+    a.setApplicationName("FlashTool");
     MainWindow w;
     w.show();
 

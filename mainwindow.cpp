@@ -11,8 +11,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->m_progressDialog->setWindowModality(Qt::ApplicationModal);
     this->m_progressDialog->setWindowFlags(this->m_progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
 
-    this->m_settings = new QSettings("MegaPirateNG", "FlashTool");
-
     connect(ui->btnSerialRefresh, SIGNAL(clicked()), SLOT(updateSerialPorts()));
     connect(ui->cmbPlatform, SIGNAL(currentIndexChanged(int)), SLOT(platformChanged(int)));
     connect(ui->btnFlash, SIGNAL(clicked()), SLOT(startFlash()));
@@ -45,12 +43,12 @@ void MainWindow::parseConfigs(DownloadsList downloads)
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(parseConfigs(DownloadsList)));
 
 
-    QString oldBoardType = this->m_settings->value("BoardType").toString();
-    QString oldRCInput = this->m_settings->value("RCInput").toString();
-    QString oldRCInputMapping = this->m_settings->value("RCInputMapping").toString();
-    QString oldPlatform = this->m_settings->value("Platform").toString();
-    QString oldGpsType = this->m_settings->value("GpsType").toString();
-    QString oldGpsBaud = this->m_settings->value("GpsBaud").toString();
+    QString oldBoardType = this->m_settings.value("BoardType").toString();
+    QString oldRCInput = this->m_settings.value("RCInput").toString();
+    QString oldRCInputMapping = this->m_settings.value("RCInputMapping").toString();
+    QString oldPlatform = this->m_settings.value("Platform").toString();
+    QString oldGpsType = this->m_settings.value("GpsType").toString();
+    QString oldGpsBaud = this->m_settings.value("GpsBaud").toString();
 
     int oldBoardTypeIndex = 0;
     int oldRCInputIndex = 0;
@@ -253,7 +251,7 @@ void MainWindow::updateSerialPorts()
 
 void MainWindow::platformChanged(int index)
 {
-    QString oldVersion = this->m_settings->value("Version").toString();
+    QString oldVersion = this->m_settings.value("Version").toString();
     int oldVersionIndex = 0;
 
     Platform platform = ui->cmbPlatform->itemData(index).value<Platform>();
@@ -351,13 +349,13 @@ MainWindow::~MainWindow()
     GpsType gpstype = ui->cmbGpsType->itemData(ui->cmbGpsType->currentIndex()).value<GpsType>();
     GpsBaudrate gpsbaud = ui->cmbGpsBaud->itemData(ui->cmbGpsBaud->currentIndex()).value<GpsBaudrate>();
 
-    this->m_settings->setValue("BoardType", board.id);
-    this->m_settings->setValue("RCInput", rcinput.id);
-    this->m_settings->setValue("RCInputMapping", rcinputmapping.id);
-    this->m_settings->setValue("Platform", platform.id);
-    this->m_settings->setValue("Version", version.id);
-    this->m_settings->setValue("GpsType", gpstype.id);
-    this->m_settings->setValue("GpsBaud", gpsbaud.id);
+    this->m_settings.setValue("BoardType", board.id);
+    this->m_settings.setValue("RCInput", rcinput.id);
+    this->m_settings.setValue("RCInputMapping", rcinputmapping.id);
+    this->m_settings.setValue("Platform", platform.id);
+    this->m_settings.setValue("Version", version.id);
+    this->m_settings.setValue("GpsType", gpstype.id);
+    this->m_settings.setValue("GpsBaud", gpsbaud.id);
 
     delete ui;
 }

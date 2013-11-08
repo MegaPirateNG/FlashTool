@@ -93,7 +93,7 @@ private:
     Ui::MainWindow *ui;
     ProgressDialog *m_progressDialog;
     VersionsList m_versionList;
-    QSettings *m_settings;
+    QSettings m_settings;
     GlobalSettings m_globalsettings;
 };
 
