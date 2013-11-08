@@ -26,5 +26,8 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
+
+RC_FILE = windows_ico.rc
+
 RESOURCES += \
     images.qrc
