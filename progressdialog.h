@@ -30,6 +30,7 @@ signals:
      void downloadsFinished(DownloadsList downloads);
 
 public:
+    explicit ProgressDialog();
     void startDownloads(DownloadsList downloads);
     void startDownloads(Download download);
 
@@ -37,6 +38,7 @@ private slots:
     void networkReplyFinished(QNetworkReply*);
     void networkReplyDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void networkReplyTimedOut();
+    void onCanceled();
 
 private:
     QTimer *m_downloadRequestTimeout;

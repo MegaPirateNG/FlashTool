@@ -1,6 +1,19 @@
 #include "progressdialog.h"
 #include "ui_progressdialog.h"
 
+ProgressDialog::ProgressDialog()
+{
+    this->setAutoClose(false);
+    this->setWindowModality(Qt::ApplicationModal);
+    this->setWindowFlags(this->windowFlags() & ~Qt::WindowCloseButtonHint);
+
+    this->m_networkManager = new QNetworkAccessManager(this);
+    connect(this->m_networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyFinished(QNetworkReply*)));
+    this->m_downloadRequestTimeout = new QTimer();
+    connect(m_downloadRequestTimeout, SIGNAL(timeout()), this, SLOT(networkReplyTimedOut()));
+    connect(this, SIGNAL(canceled()), this, SLOT(onCanceled()));
+}
+
 void ProgressDialog::startDownloads(Download download)
 {
     DownloadsList downloads;
@@ -10,16 +23,6 @@ void ProgressDialog::startDownloads(Download download)
 
 void ProgressDialog::startDownloads(DownloadsList downloads)
 {
-    if (this->m_networkManager == NULL) {
-        this->m_networkManager = new QNetworkAccessManager(this);
-        connect(this->m_networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkReplyFinished(QNetworkReply*)));
-    }
-
-    if (this->m_downloadRequestTimeout == NULL) {
-        this->m_downloadRequestTimeout = new QTimer();
-        connect(m_downloadRequestTimeout, SIGNAL(timeout()), this, SLOT(networkReplyTimedOut()));
-    }
-
     this->m_downloads = downloads;
     if (this->m_downloads.count() > 0) {
         this->m_downloadsIndex = 0;
@@ -40,11 +43,15 @@ void ProgressDialog::doUrlDownload(QString url)
     connect(this->m_networkRequest, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(networkReplyDownloadProgress(qint64,qint64)));
 }
 
-void ProgressDialog::networkReplyTimedOut()
+void ProgressDialog::onCanceled()
 {
     this->m_downloadRequestTimeout->stop();
     this->m_networkRequest->abort();
-    this->cancel();
+}
+
+void ProgressDialog::networkReplyTimedOut()
+{
+    emit canceled();
 }
 
 void ProgressDialog::networkReplyFinished(QNetworkReply *networkReply)

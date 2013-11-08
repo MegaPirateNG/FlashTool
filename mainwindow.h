@@ -84,10 +84,15 @@ public:
 private slots:
     void updateSerialPorts();
     void updateConfigs();
-    void parseConfigs(DownloadsList downloads);
+    void downloadFinishedConfigs(DownloadsList downloads);
     void platformChanged(int index);
     void startFlash();
-    void prepareSourceCode(DownloadsList downloads);
+    void downloadFinishedFirmware(DownloadsList downloads);
+    void canceledDownloadFirmware();
+    void avrdudeReadStandardOutput();
+    void avrdudeReadStandardError();
+    void avrdudeFinished(int exitCode);
+    void canceledFirmwareUpload();
 
 private:
     Ui::MainWindow *ui;
@@ -95,6 +100,11 @@ private:
     VersionsList m_versionList;
     QSettings m_settings;
     GlobalSettings m_globalsettings;
+    QProcess *m_process;
+    QString m_avrdudeOutput;
+
+    void flashFirmware(QString filename, QString md5Filename);
+    void parseAvrdudeOutput();
 };
 
 #endif // MAINWINDOW_H

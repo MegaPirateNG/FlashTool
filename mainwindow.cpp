@@ -8,8 +8,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
     this->m_progressDialog = new ProgressDialog();
-    this->m_progressDialog->setWindowModality(Qt::ApplicationModal);
-    this->m_progressDialog->setWindowFlags(this->m_progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
 
     connect(ui->btnSerialRefresh, SIGNAL(clicked()), SLOT(updateSerialPorts()));
     connect(ui->cmbPlatform, SIGNAL(currentIndexChanged(int)), SLOT(platformChanged(int)));
@@ -21,13 +19,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::updateConfigs()
 {
-    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(parseConfigs(DownloadsList)));
+    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedConfigs(DownloadsList)));
     this->m_progressDialog->setLabelText(tr("Updating available firmwares..."));
     this->m_progressDialog->show();
     this->m_progressDialog->startDownloads(Download(FLASHTOOL_PATH_URI));
 }
 
-void MainWindow::parseConfigs(DownloadsList downloads)
+void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
 {
     Download download = downloads[0];
 
@@ -40,8 +38,7 @@ void MainWindow::parseConfigs(DownloadsList downloads)
         return;
     }
 
-    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(parseConfigs(DownloadsList)));
-
+    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedConfigs(DownloadsList)));
 
     QString oldBoardType = this->m_settings.value("BoardType").toString();
     QString oldRCInput = this->m_settings.value("RCInput").toString();
@@ -303,7 +300,8 @@ void MainWindow::startFlash()
     GpsType gpstype = ui->cmbGpsType->itemData(ui->cmbGpsType->currentIndex()).value<GpsType>();
     GpsBaudrate gpsbaud = ui->cmbGpsBaud->itemData(ui->cmbGpsBaud->currentIndex()).value<GpsBaudrate>();
 
-    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(prepareSourceCode(DownloadsList)));
+    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+    connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
     this->m_progressDialog->setLabelText((tr("Downloading firmware %1 (%2) ...").arg(platform.name).arg(version.number)));
     this->m_progressDialog->show();
 
@@ -318,25 +316,141 @@ void MainWindow::startFlash()
     hexname.replace("%gpstype%", gpstype.id);
     hexname.replace("%gpsbaud%", gpsbaud.id);
 
-    this->m_progressDialog->startDownloads(Download(url + hexname));
+    DownloadsList downloads;
+    downloads<<Download(url + hexname);
+    downloads<<Download(url + hexname + ".md5");
+
+    this->m_progressDialog->startDownloads(downloads);
 }
 
-void MainWindow::prepareSourceCode(DownloadsList downloads)
+void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
 {
-    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(prepareSourceCode(DownloadsList)));
+    Download download = downloads[0];
+    Download downloadMd5 = downloads[1];
 
-    if (!downloads[0].success) {
+    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
+    this->m_progressDialog->hide();
+
+    if (!download.success) {
         QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware, try again later."));
     } else {
-        //Flashing logic
+        flashFirmware(download.tmpFile, downloadMd5.tmpFile);
+    }
+}
+
+void MainWindow::flashFirmware(QString filename, QString md5Filename)
+{
+    //get md5 from server file
+    QFile md5File(md5Filename);
+    md5File.open(QIODevice::ReadOnly);
+    QTextStream in(&md5File);
+    QString md5sumReference;
+    while(!in.atEnd()) {
+        QString line = in.readLine();
+        md5sumReference = line.left(32);
+        break;
+    }
+    md5File.close();
+    QFile::remove(md5Filename);
+
+    //calculate md5 from downloaded file
+    QFile hexFile(filename);
+    hexFile.open(QIODevice::ReadOnly);
+    QString md5sum = QString(QCryptographicHash::hash(hexFile.readAll(),QCryptographicHash::Md5).toHex());
+    hexFile.close();
+
+    if (md5sum != md5sumReference)
+    {
+        QMessageBox::critical(this, tr("FlashTool"), tr("The downloaded firmware looks corrupted, please try again."));
     }
 
-    //This is just until the flashing itself is finished
-    for (int i = 0; i < downloads.count(); i++) {
-        QFile::remove(downloads[i].tmpFile);
+    QString hexFilename = QDir::tempPath() + "/flashTool.hex";
+    QFile::rename(filename, hexFilename);
+
+    QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
+    QStringList arguments;
+    arguments << "-C" + qApp->applicationDirPath() + "/external/avrdude.conf";
+    arguments << "-patmega2560";
+    arguments << "-cstk500v2";
+    arguments << "-P" + ui->cmbSerialPort->currentText();
+    arguments << "-b115200";
+    arguments << "-D";
+    arguments << "-Uflash:w:" + hexFilename + ":i";
+
+    this->m_avrdudeOutput = "";
+    this->m_process = new QProcess;
+
+    connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+    connect(this->m_process,SIGNAL(readyReadStandardOutput()),this, SLOT(avrdudeReadStandardOutput()));
+    connect(this->m_process,SIGNAL(readyReadStandardError()),this, SLOT(avrdudeReadStandardError()));
+    connect(this->m_process,SIGNAL(finished(int)),this, SLOT(avrdudeFinished(int)));
+
+    this->m_process->start(program, arguments);
+    this->m_progressDialog->show();
+    this->m_progressDialog->setLabelText(tr("Starting flashing process..."));
+}
+
+void MainWindow::canceledFirmwareUpload()
+{
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+    this->m_process->kill();
+    QMessageBox::critical(this, tr("FlashTool"), tr("You canceled the firmware upload!"));
+}
+
+void MainWindow::parseAvrdudeOutput()
+{
+    QString output = this->m_avrdudeOutput;
+    qDebug()<<output;
+    this->m_progressDialog->setMaximum(50);
+
+    if (output.contains("AVR device initialized and ready to accept instructions")) {
+
+        if (!output.contains("bytes of flash written")) {
+            QString writing = output.mid(output.lastIndexOf("Writing |"), 61);
+            this->m_progressDialog->setValue(writing.count("#"));
+            this->m_progressDialog->setLabelText(tr("Writing firmware please wait..."));
+        } else {
+            QString reading = output.mid(output.lastIndexOf("Reading |"), 61);
+            this->m_progressDialog->setValue(reading.count("#"));
+            this->m_progressDialog->setLabelText(tr("Verifying firmware please wait..."));
+        }
     }
+}
+
+void MainWindow::avrdudeFinished(int exitCode)
+{
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
 
     this->m_progressDialog->hide();
+    if (exitCode == 0) {
+        QMessageBox::information(this, tr("FlashTool"), tr("Firmware flashed successfully!"));
+    } else {
+        QString errorFilename = qApp->applicationDirPath() + "/error.txt";
+        QFile errorFile(errorFilename);
+        errorFile.open(QIODevice::ReadWrite);
+        errorFile.write(this->m_avrdudeOutput.toLatin1());
+        errorFile.close();
+        QMessageBox::critical(this, tr("FlashTool"), tr("Flashing failed, please consulte the error.txt file located here: %1").arg(errorFilename));
+    }
+}
+
+void MainWindow::avrdudeReadStandardOutput()
+{
+    this->m_avrdudeOutput.append(this->m_process->readAllStandardOutput());
+    this->parseAvrdudeOutput();
+}
+
+void MainWindow::avrdudeReadStandardError()
+{
+    this->m_avrdudeOutput.append(this->m_process->readAllStandardError());
+    this->parseAvrdudeOutput();
+}
+
+void MainWindow::canceledDownloadFirmware()
+{
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
+    QMessageBox::critical(this, tr("FlashTool"), tr("You either canceled the firmware download or the download timed out."));
 }
 
 MainWindow::~MainWindow()
