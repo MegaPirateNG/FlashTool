@@ -1,0 +1,58 @@
+<xml>
+	<settings hexurl="http://tobedefined:8888/hex"/>
+
+	<boards>
+		<board name="RCTimer CRIUS V2" id="crius2" src-flags="MPNG_BOARD_TYPE=RCTIMER_CRIUS_V2"/>
+		<board name="RCTimer CRIUS V1 / Hobbyking AIOP boards" id="crius1" src-flags="MPNG_BOARD_TYPE=CRIUS_V1"/>
+		<board name="Hobbyking Red MultiWii Pro" id="hk_red" src-flags="MPNG_BOARD_TYPE=HK_RED_MULTIWII_PRO"/>
+		<board name="BlackVortex" id="blackvortex" src-flags="MPNG_BOARD_TYPE=BLACK_VORTEX"/>
+	</boards>
+
+	<rcinputs>
+		<rcinput name="PPM on A8" id="ppma8" src-flags="SERIAL_PPM=SERIAL_PPM_ENABLED"/>
+		<rcinput name="PPM on PL1" id="ppmpl1" src-flags="SERIAL_PPM=SERIAL_PPM_ENABLED_PL1"/>
+		<rcinput name="Regular PWM on A8-A15" id="pwma8" src-flags="SERIAL_PPM=SERIAL_PPM_DISABLED"/>
+
+		<rcmapping name="Default" id="default" src-flags="RC_MAPPING=RC_MAP_STANDARD"/>
+		<rcmapping name="Graupner / Spektrum" id="graupner_spektrum" src-flags="RC_MAPPING=RC_MAP_GRAUPNER"/>
+		<rcmapping name="Hitec / Sanwa / others" id="hitec_sanwa" src-flags="RC_MAPPING=RC_MAP_HITEC"/>
+		<rcmapping name="Multiwii" id="multiwii" src-flags="RC_MAPPING=RC_MAP_MULTIWII"/>
+		<rcmapping name="JR" id="jr" src-flags="RC_MAPPING=RC_MAP_JR"/>
+	</rcinputs>
+
+	<platforms>
+		<platform name="APM:Copter - Quad" version="copter" image="copter-quad.png" id="copter-quad" src-flags="FRAME_CONFIG=QUAD_FRAME"/>
+		<platform name="APM:Copter - Tri" version="copter" image="copter-tri.png" id="copter-tri" src-flags="FRAME_CONFIG=TRI_FRAME"/>
+		<platform name="APM:Copter - Hexa" version="copter" image="copter-hexa.png" id="copter-hexa" src-flags="FRAME_CONFIG=HEXA_FRAME"/>
+		<platform name="APM:Copter - Y6" version="copter" image="copter-y6.png" id="copter-y6" src-flags="FRAME_CONFIG=Y6_FRAME"/>
+		<platform name="APM:Copter - Octocopter" version="copter" image="copter-octox.png" id="copter-octox" src-flags="FRAME_CONFIG=OCTA_FRAME"/>
+		<platform name="APM:Copter - X8" version="copter" image="copter-x8.png" id="copter-x8" src-flags="FRAME_CONFIG=OCTA_QUAD_FRAME"/>
+		<platform name="APM:Copter - Helicopter" version="copter" image="copter-heli.png" id="copter-heli" src-flags="FRAME_CONFIG=HELI_FRAME"/>
+		<platform name="APM:Plane" version="plane" image="plane.png" id="plane"/>
+		<platform name="APM:Rover" version="rover" image="rover.png" id="rover"/>
+	</platforms>
+
+	<gps>
+		<gpstype name="Auto detect" id="default" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_AUTO"/>
+		<gpstype name="None" id="none" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_NONE"/>
+		<gpstype name="NMEA" id="nmea" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_NMEA"/>
+		<gpstype name="SIRF" id="sirf" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_SIRF"/>
+		<gpstype name="UBLOX" id="ublox" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_UBLOX"/>
+		<gpstype name="IMU" id="imu" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_IMU"/>
+		<gpstype name="MTK" id="mtk" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_MTK"/>
+		<gpstype name="HIL" id="hil" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_HIL"/>
+		<gpstype name="MTK19" id="mtk19" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_MTK19"/>
+
+		<gpsbaud name="38400" id="38400" src-flags="SERIAL2_BAUD=38400"/>
+		<gpsbaud name="57600" id="57600" src-flags="SERIAL2_BAUD=57600"/>
+		<gpsbaud name="115200" id="115200" src-flags="SERIAL2_BAUD=115200"/>
+	</gps>
+
+	<versions>
+		<version platform="copter" number="3.0.1-RC3" id="3.0.1-rc3" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r3" src-dir="ArduCopter"/>
+		<version platform="plane" number="2.74b" id="2.74b" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.74b" src-dir="ArduPlane"/>
+		<version platform="plane" number="2.75" id="2.75" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.75" src-dir="ArduPlane"/>
+		<version platform="plane" number="2.76" id="2.76" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.76" src-dir="ArduPlane"/>
+	</versions>
+
+</xml>
