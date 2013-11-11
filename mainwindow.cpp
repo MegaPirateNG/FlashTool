@@ -8,7 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
     this->m_progressDialog = new ProgressDialog();
+    this->m_retrydownloads = new QTimer();
 
+    connect(this->m_retrydownloads, SIGNAL(timeout()), this, SLOT(retryFirmwareDownload()));
     connect(ui->btnSerialRefresh, SIGNAL(clicked()), SLOT(updateSerialPorts()));
     connect(ui->cmbPlatform, SIGNAL(currentIndexChanged(int)), SLOT(platformChanged(int)));
     connect(ui->btnFlash, SIGNAL(clicked()), SLOT(startFlash()));
@@ -66,7 +68,6 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
 
         //Settings
         if (xml.isStartElement() && (xml.name() == "settings")) {
-            this->m_globalsettings.hexnamepattern = xml.attributes().value("hexnamepattern").toString().simplified();
             this->m_globalsettings.hexurl = xml.attributes().value("hexurl").toString().simplified();
         }
 
@@ -280,11 +281,12 @@ void MainWindow::platformChanged(int index)
 
 void MainWindow::startFlash()
 {
+    /*
     if (!ui->cmbSerialPort->isEnabled())
     {
         QMessageBox::critical(this, tr("FlashTool"), tr("No serial port found, please make sure you connected your board via usb."));
         return;
-    }
+    }*/
 
     if (!ui->cmbVersion->isEnabled())
     {
@@ -300,27 +302,61 @@ void MainWindow::startFlash()
     GpsType gpstype = ui->cmbGpsType->itemData(ui->cmbGpsType->currentIndex()).value<GpsType>();
     GpsBaudrate gpsbaud = ui->cmbGpsBaud->itemData(ui->cmbGpsBaud->currentIndex()).value<GpsBaudrate>();
 
-    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(firmwareRequestDone(DownloadsList)));
     connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
-    this->m_progressDialog->setLabelText((tr("Downloading firmware %1 (%2) ...").arg(platform.name).arg(version.number)));
+    this->m_progressDialog->setLabelText((tr("Requesting firmware %1 (%2) ...").arg(platform.name).arg(version.number)));
     this->m_progressDialog->show();
 
-    QString hexname = this->m_globalsettings.hexnamepattern;
-    QString url = this->m_globalsettings.hexurl;
+    QString request;
 
-    hexname.replace("%board%", board.id);
-    hexname.replace("%rcinput%", rcinput.id);
-    hexname.replace("%rcmapping%", rcinputmapping.id);
-    hexname.replace("%platform%", platform.id);
-    hexname.replace("%version%", version.id);
-    hexname.replace("%gpstype%", gpstype.id);
-    hexname.replace("%gpsbaud%", gpsbaud.id);
+    request.append("<?xml version=\"1.0\"?>");
+    request.append("<xml>");
+    request.append("<board>" + board.id + "</board>");
+    request.append("<rcinput>" + rcinput.id + "</rcinput>");
+    request.append("<rcmapping>" + rcinputmapping.id + "</rcmapping>");
+    request.append("<platform>" + platform.id + "</platform>");
+    request.append("<version>" + version.id + "</version>");
+    request.append("<gpstype>" + gpstype.id + "</gpstype>");
+    request.append("<gpsbaud>" + gpsbaud.id + "</gpsbaud>");
+    request.append("</xml>");
 
-    DownloadsList downloads;
-    downloads<<Download(url + hexname);
-    downloads<<Download(url + hexname + ".md5");
+    this->m_progressDialog->startDownloads(Download(this->m_globalsettings.hexurl, request));
+}
 
-    this->m_progressDialog->startDownloads(downloads);
+void MainWindow::firmwareRequestDone(DownloadsList downloads)
+{
+    Download download = downloads[0];
+
+    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(firmwareRequestDone(DownloadsList)));
+
+    this->m_progressDialog->setLabelText(tr("Waiting for firmware..."));
+
+    QFile *file = new QFile(download.tmpFile);
+    file->open(QIODevice::ReadOnly | QIODevice::Text);
+
+    QXmlStreamReader xml(file);
+
+    QString firmwareFile;
+
+    while (!xml.atEnd()) {
+        xml.readNext();
+
+        //Firmware
+        if (xml.isStartElement() && (xml.name() == "firmware")) {
+            xml.readNext();
+            firmwareFile = xml.text().toString().simplified();
+        }
+    }
+
+    file->close();
+    file->remove();
+
+    DownloadsList firmwareDownloads;
+    firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile);
+    firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".md5");
+
+    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+    this->m_progressDialog->startDownloads(firmwareDownloads);
 }
 
 void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
@@ -330,13 +366,29 @@ void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
 
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
     disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
-    this->m_progressDialog->hide();
 
     if (!download.success) {
-        QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware, try again later."));
+        QFile::remove(download.tmpFile);
+        QFile::remove(downloadMd5.tmpFile);
+        this->m_currentFirmwareDownloads = downloads;
+        this->m_retrydownloads->start(10000);
+        if (download.tries > 30) {
+            QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware, try again later."));
+        }
     } else {
+
+        this->m_progressDialog->hide();
+
         flashFirmware(download.tmpFile, downloadMd5.tmpFile);
     }
+}
+
+void MainWindow::retryFirmwareDownload()
+{
+    this->m_retrydownloads->stop();
+    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+    connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
+    this->m_progressDialog->startDownloads(this->m_currentFirmwareDownloads);
 }
 
 void MainWindow::flashFirmware(QString filename, QString md5Filename)
@@ -366,6 +418,7 @@ void MainWindow::flashFirmware(QString filename, QString md5Filename)
     }
 
     QString hexFilename = QDir::tempPath() + "/flashTool.hex";
+    QFile::remove(hexFilename);
     QFile::rename(filename, hexFilename);
 
     QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
@@ -449,6 +502,7 @@ void MainWindow::avrdudeReadStandardError()
 
 void MainWindow::canceledDownloadFirmware()
 {
+    this->m_retrydownloads->stop();
     disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
     QMessageBox::critical(this, tr("FlashTool"), tr("You either canceled the firmware download or the download timed out."));
 }

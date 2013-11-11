@@ -12,12 +12,22 @@
 struct Download
 {
     QString uri;
+    QString body;
     QString tmpFile;
+    int tries;
     bool success;
 
     Download(QString uri)
     {
         this->uri = uri;
+        this->tries = 0;
+    }
+
+    Download(QString uri, QString body)
+    {
+        this->uri = uri;
+        this->body = body;
+        this->tries = 0;
     }
 };
 typedef QList<Download> DownloadsList;
@@ -47,7 +57,7 @@ private:
     int m_downloadsIndex;
     DownloadsList m_downloads;
 
-    void doUrlDownload(QString url);
+    void doUrlDownload(Download download);
 };
 
 #endif // PROGRESSDIALOG_H

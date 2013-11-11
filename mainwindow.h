@@ -65,7 +65,6 @@ Q_DECLARE_METATYPE(Version)
 struct GlobalSettings
 {
     QString hexurl;
-    QString hexnamepattern;
 };
 Q_DECLARE_METATYPE(GlobalSettings)
 
@@ -88,11 +87,13 @@ private slots:
     void platformChanged(int index);
     void startFlash();
     void downloadFinishedFirmware(DownloadsList downloads);
+    void firmwareRequestDone(DownloadsList downloads);
     void canceledDownloadFirmware();
     void avrdudeReadStandardOutput();
     void avrdudeReadStandardError();
     void avrdudeFinished(int exitCode);
     void canceledFirmwareUpload();
+    void retryFirmwareDownload();
 
 private:
     Ui::MainWindow *ui;
@@ -102,6 +103,8 @@ private:
     GlobalSettings m_globalsettings;
     QProcess *m_process;
     QString m_avrdudeOutput;
+    DownloadsList m_currentFirmwareDownloads;
+    QTimer *m_retrydownloads;
 
     void flashFirmware(QString filename, QString md5Filename);
     void parseAvrdudeOutput();

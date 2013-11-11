@@ -26,19 +26,26 @@ void ProgressDialog::startDownloads(DownloadsList downloads)
     this->m_downloads = downloads;
     if (this->m_downloads.count() > 0) {
         this->m_downloadsIndex = 0;
-        doUrlDownload(this->m_downloads[this->m_downloadsIndex].uri);
+        doUrlDownload(this->m_downloads[this->m_downloadsIndex]);
     }
 }
 
-void ProgressDialog::doUrlDownload(QString url)
+void ProgressDialog::doUrlDownload(Download download)
 {
+    download.tries++;
     this->setMaximum(100);
     this->setValue(1);
     QNetworkRequest request;
-    request.setUrl(url);
+    request.setUrl(download.uri);
     request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0");
     request.setRawHeader("Cache-Control", "no-cache");
-    this->m_networkRequest = this->m_networkManager->get(request);
+    request.setRawHeader("Content-Type", "text/xml");
+
+    if (download.body.isEmpty()) {
+        this->m_networkRequest = this->m_networkManager->get(request);
+    } else {
+        this->m_networkRequest = this->m_networkManager->post(request, download.body.toLatin1());
+    }
     m_downloadRequestTimeout->start(30000);
     connect(this->m_networkRequest, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(networkReplyDownloadProgress(qint64,qint64)));
 }
