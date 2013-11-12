@@ -1,5 +1,4 @@
 #include "progressdialog.h"
-#include "ui_progressdialog.h"
 
 ProgressDialog::ProgressDialog()
 {
