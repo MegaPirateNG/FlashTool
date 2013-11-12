@@ -38,17 +38,24 @@ exports.init = function(publicPath, builder) {
     app.use(xmlBodyParser);
 
     app.post('/hex', function(req, res) {
-        console.log('Get hex');
-        builder.handleBuildJob(req, function(hexfile) {
-            var body = '<xml><firmware>' + hexfile + '</firmware></xml>';
-            res.setHeader('Content-Type', 'text/xml');
-            res.setHeader('Content-Length', body.length);
-            res.end(body);
+        logger.info('Client requests hex ' + req.headers['user-agent']);
+        builder.handleBuildJob(req, function(status, hexfile) {
+            if (status) {
+                var body = '<xml><firmware>' + hexfile + '</firmware></xml>';
+                res.setHeader('Content-Type', 'text/xml');
+                res.setHeader('Content-Length', body.length);
+                res.end(body);
+            } else {
+                var body = '<xml><error>' + hexfile + '</error></xml>';
+                res.setHeader('Content-Type', 'text/xml');
+                res.setHeader('Content-Length', body.length);
+                res.send(500, body);
+            }
         });
     });
 
     app.use(express.static(publicPath));
 
     app.listen(8888);
-    console.log('Server started');
+    logger.info('Server started');
 };

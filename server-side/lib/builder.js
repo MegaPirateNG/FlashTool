@@ -16,7 +16,7 @@ var findConfigElementById = function(config, id) {
             return config[i];
         }
     }
-    return null;
+    throw new Error('Config id invalid!')
 };
 
 exports.init = function(configFile, publicPath) {
@@ -41,16 +41,22 @@ exports.handleBuildJob = function(req, callback) {
 
     //Validate request
     if (!req.body.board || !req.body.rcinput || !req.body.rcmapping || !req.body.platform || !req.body.version || !req.body.gpstype || !req.body.gpsbaud) {
+        callback(false, 'missing parameters');
         return false;
     }
 
-    buildConfig.board = findConfigElementById(configData.boards.board, req.body.board);
-    buildConfig.rcinput = findConfigElementById(configData.rcinputs.rcinput, req.body.rcinput);
-    buildConfig.rcmapping = findConfigElementById(configData.rcinputs.rcmapping, req.body.rcmapping);
-    buildConfig.platform = findConfigElementById(configData.platforms.platform, req.body.platform);
-    buildConfig.version = findConfigElementById(configData.versions.version, req.body.version);
-    buildConfig.gpstype = findConfigElementById(configData.gps.gpstype, req.body.gpstype);
-    buildConfig.gpsbaud = findConfigElementById(configData.gps.gpsbaud, req.body.gpsbaud);
+    try {
+        buildConfig.board = findConfigElementById(configData.boards.board, req.body.board);
+        buildConfig.rcinput = findConfigElementById(configData.rcinputs.rcinput, req.body.rcinput);
+        buildConfig.rcmapping = findConfigElementById(configData.rcinputs.rcmapping, req.body.rcmapping);
+        buildConfig.platform = findConfigElementById(configData.platforms.platform, req.body.platform);
+        buildConfig.version = findConfigElementById(configData.versions.version, req.body.version);
+        buildConfig.gpstype = findConfigElementById(configData.gps.gpstype, req.body.gpstype);
+        buildConfig.gpsbaud = findConfigElementById(configData.gps.gpsbaud, req.body.gpsbaud);
+    } catch (e) {
+        callback(false, 'invalid parameters');
+        return false;
+    }
 
     Step(
         function checkCommit() {
@@ -65,6 +71,9 @@ exports.handleBuildJob = function(req, callback) {
                 if (!exists) {
                     fs.exists(hexFilePath + '/' + hexFile, function(exists) {
                         if (!exists) {
+
+                            logger.info('Need to build hex file for config: ' + JSON.stringify(buildConfig));
+
                             queue.enqueue({
                                 'config' : buildConfig,
                                 'commit' : commit,
@@ -77,7 +86,7 @@ exports.handleBuildJob = function(req, callback) {
                 }
             });
 
-            callback(hexFile);
+            callback(true, hexFile);
         }
     );
 };
