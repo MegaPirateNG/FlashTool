@@ -32,12 +32,14 @@ void ProgressDialog::startDownloads(DownloadsList downloads)
 
 void ProgressDialog::doUrlDownload(Download download)
 {
+    QString userAgent = "FlashTool ";
+    userAgent.append(FLASHTOOL_VERSION);
     download.tries++;
     this->setMaximum(100);
     this->setValue(1);
     QNetworkRequest request;
     request.setUrl(download.uri);
-    request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:13.0) Gecko/20100101 Firefox/13.0");
+    request.setRawHeader("User-Agent", userAgent.toLatin1());
     request.setRawHeader("Cache-Control", "no-cache");
     request.setRawHeader("Content-Type", "text/xml");
 

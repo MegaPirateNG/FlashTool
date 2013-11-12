@@ -13,9 +13,11 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = flashTool
 TEMPLATE = app
 
-FLASHTOOL_PATH_URI = http://tobedefined/update.xml
+FLASHTOOL_PATH_URI = http://tobedefined:8888/update.xml
+FLASHTOOL_VERSION = 1.0
 
 DEFINES += FLASHTOOL_PATH_URI=\\\"$$FLASHTOOL_PATH_URI\\\"
+DEFINES += FLASHTOOL_VERSION=\\\"$$FLASHTOOL_VERSION\\\"
 
 SOURCES += main.cpp\
         mainwindow.cpp \

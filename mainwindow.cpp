@@ -336,6 +336,7 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
     QXmlStreamReader xml(file);
 
     QString firmwareFile;
+    QString error;
 
     while (!xml.atEnd()) {
         xml.readNext();
@@ -345,10 +346,23 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
             xml.readNext();
             firmwareFile = xml.text().toString().simplified();
         }
+
+        //Error
+        if (xml.isStartElement() && (xml.name() == "error")) {
+            xml.readNext();
+            error = xml.text().toString().simplified();
+        }
     }
 
     file->close();
     file->remove();
+
+    if (!download.success) {
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
+        this->m_progressDialog->hide();
+        QMessageBox::critical(this, tr("FlashTool"), tr("An error occured on the build server: %1").arg(error));
+        return;
+    }
 
     DownloadsList firmwareDownloads;
     firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile);
