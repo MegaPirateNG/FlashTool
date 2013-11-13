@@ -19,6 +19,7 @@ The server also needs some tools installed:
 * md5sum
 * make
 * git
+* gzip
 
 You need to alter the ```update.xml``` in the ```public``` sub-directory. (set ```<settings hexurl="http://tobedefined:8888/hex"/>```)
 
