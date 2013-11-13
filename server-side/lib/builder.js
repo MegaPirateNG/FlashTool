@@ -67,13 +67,13 @@ exports.handleBuildJob = function(req, callback) {
                 path = os.tmpdir() + '/' + configHash + '_' + commit,
                 hexFile = configHash + '_' + commit + '.hex';
 
-            fs.exists(hexFilePath + '/' + hexFile, function(exists) {
+            //Check if hexfile already exists
+            fs.exists(hexFilePath + '/' + hexFile + '.gz', function(exists) {
                 if (!exists) {
-                    fs.exists(hexFilePath + '/' + hexFile, function(exists) {
+                    //Check if no current build for the same thing is in process
+                    fs.exists(path, function(exists) {
                         if (!exists) {
-
                             logger.info('Need to build hex file for config: ' + JSON.stringify(buildConfig));
-
                             queue.enqueue({
                                 'config' : buildConfig,
                                 'commit' : commit,

@@ -50,6 +50,11 @@ process.on('message', function(payload) {
                 hexName = path.basename(payload.hexFile);
             exec('cd ' + hexPath + ';md5sum -b ' + hexName + ' > ' + hexName + '.md5', this);
         },
+        function createGz(status) {
+            var hexPath = path.dirname(payload.hexFile),
+                hexName = path.basename(payload.hexFile);
+            exec('cd ' + hexPath + ';gzip ' + hexName, this);
+        },
         function fin(status) {
             process.send('next');
         }
