@@ -14,9 +14,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnSerialRefresh, SIGNAL(clicked()), SLOT(updateSerialPorts()));
     connect(ui->cmbPlatform, SIGNAL(currentIndexChanged(int)), SLOT(platformChanged(int)));
     connect(ui->btnFlash, SIGNAL(clicked()), SLOT(startFlash()));
+    connect(ui->btnAbout, SIGNAL(clicked()), SLOT(about()));
 
     this->updateSerialPorts();
     this->updateConfigs();
+
+    this->m_aboutDlg = new AboutDialog();
+}
+
+void MainWindow::about()
+{
+    this->m_aboutDlg->show();
 }
 
 void MainWindow::updateConfigs()

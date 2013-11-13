@@ -186,9 +186,9 @@
    <widget class="QPushButton" name="btnFlash">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>10</x>
       <y>310</y>
-      <width>111</width>
+      <width>131</width>
       <height>23</height>
      </rect>
     </property>
@@ -286,6 +286,19 @@
     </property>
     <property name="text">
      <string>GPS Baudrate</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnAbout">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>310</y>
+      <width>131</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>About</string>
     </property>
    </widget>
   </widget>

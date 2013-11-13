@@ -7,6 +7,7 @@
 #include "qextserialport.h"
 #include "qextserialenumerator.h"
 #include <zlib.h>
+#include "aboutdialog.h"
 
 #include <QtGui>
 
@@ -95,6 +96,7 @@ private slots:
     void avrdudeFinished(int exitCode);
     void canceledFirmwareUpload();
     void retryFirmwareDownload();
+    void about();
 
 private:
     Ui::MainWindow *ui;
@@ -106,6 +108,7 @@ private:
     QString m_avrdudeOutput;
     DownloadsList m_currentFirmwareDownloads;
     QTimer *m_retrydownloads;
+    AboutDialog *m_aboutDlg;
 
     void flashFirmware(QString filename, QString md5Filename);
     void parseAvrdudeOutput();
