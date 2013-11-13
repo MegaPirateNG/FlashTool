@@ -18,6 +18,8 @@ The server also needs some tools installed:
 * gcc
 * md5sum
 * make
+* git
+
 You need to alter the ```update.xml``` in the ```public``` sub-directory. (set ```<settings hexurl="http://tobedefined:8888/hex"/>```)
 
 Use ```node app.js``` to start the server. The server will listen on port 8888, the server should not be run as root.
