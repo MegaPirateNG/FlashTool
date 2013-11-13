@@ -6,6 +6,7 @@
 #include "progressdialog.h"
 #include "qextserialport.h"
 #include "qextserialenumerator.h"
+#include <zlib.h>
 
 #include <QtGui>
 
@@ -108,6 +109,7 @@ private:
 
     void flashFirmware(QString filename, QString md5Filename);
     void parseAvrdudeOutput();
+    QByteArray gzipDecompress(QByteArray compressData);
 };
 
 #endif // MAINWINDOW_H

@@ -365,7 +365,7 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
     }
 
     DownloadsList firmwareDownloads;
-    firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile);
+    firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".gz");
     firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".md5");
 
     connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
@@ -422,12 +422,21 @@ void MainWindow::flashFirmware(QString filename, QString md5Filename)
     //calculate md5 from downloaded file
     QFile hexFile(filename);
     hexFile.open(QIODevice::ReadOnly);
-    QString md5sum = QString(QCryptographicHash::hash(hexFile.readAll(),QCryptographicHash::Md5).toHex());
+
+    QByteArray data = hexFile.readAll();
+
+    //Check if file is gz compressed and decompress
+    if (data.count() >= 10 || data.at(0) == 0x1f) {
+        data = gzipDecompress(data);
+    }
+
+    QString md5sum = QString(QCryptographicHash::hash(data,QCryptographicHash::Md5).toHex());
     hexFile.close();
 
     if (md5sum != md5sumReference)
     {
         QMessageBox::critical(this, tr("FlashTool"), tr("The downloaded firmware looks corrupted, please try again."));
+        return;
     }
 
     QString hexFilename = QDir::tempPath() + "/flashTool.hex";
@@ -455,6 +464,57 @@ void MainWindow::flashFirmware(QString filename, QString md5Filename)
     this->m_process->start(program, arguments);
     this->m_progressDialog->show();
     this->m_progressDialog->setLabelText(tr("Starting flashing process..."));
+}
+
+
+QByteArray MainWindow::gzipDecompress(QByteArray compressData)
+{
+    if (compressData.size() <= 4) {
+        qWarning("gUncompress: Input data is truncated");
+        return QByteArray();
+    }
+
+    QByteArray result;
+
+    int ret;
+    z_stream strm;
+    static const int CHUNK_SIZE = 1024;
+    char out[CHUNK_SIZE];
+
+    /* allocate inflate state */
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = compressData.size();
+    strm.next_in = (Bytef*)(compressData.data());
+
+    ret = inflateInit2(&strm, 15 +  32); // gzip decoding
+    if (ret != Z_OK)
+        return QByteArray();
+
+    // run inflate()
+    do {
+        strm.avail_out = CHUNK_SIZE;
+        strm.next_out = (Bytef*)(out);
+
+        ret = inflate(&strm, Z_NO_FLUSH);
+        Q_ASSERT(ret != Z_STREAM_ERROR);  // state not clobbered
+
+        switch (ret) {
+        case Z_NEED_DICT:
+            ret = Z_DATA_ERROR;     // and fall through
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+            (void)inflateEnd(&strm);
+            return QByteArray();
+        }
+
+        result.append(out, CHUNK_SIZE - strm.avail_out);
+    } while (strm.avail_out == 0);
+
+    // clean up and return
+    inflateEnd(&strm);
+    return result;
 }
 
 void MainWindow::canceledFirmwareUpload()
