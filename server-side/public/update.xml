@@ -1,5 +1,5 @@
 <xml>
-	<settings hexurl="http://tobedefined:8888/hex"/>
+	<settings hexurl="http://fw.megapirateng.com:8888/hex"/>
 
 	<boards>
 		<board name="RCTimer CRIUS V2" id="crius2" src-flags="MPNG_BOARD_TYPE=RCTIMER_CRIUS_V2"/>
