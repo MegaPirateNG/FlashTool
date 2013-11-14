@@ -19,6 +19,13 @@ MainWindow::MainWindow(QWidget *parent) :
     this->updateSerialPorts();
     this->updateConfigs();
 
+    //Path for firmware, probably needs to be changed on macosx
+    this->m_firmwareDirectoryName = qApp->applicationDirPath() + "/firmwares/";
+    QDir dir;
+    if (!dir.exists(this->m_firmwareDirectoryName)) {
+        dir.mkdir(this->m_firmwareDirectoryName);
+    }
+
     this->m_aboutDlg = new AboutDialog();
 }
 
@@ -372,12 +379,18 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
         return;
     }
 
-    DownloadsList firmwareDownloads;
-    firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".gz");
-    firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".md5");
+    this->m_firmwareFileName = firmwareFile;
 
-    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
-    this->m_progressDialog->startDownloads(firmwareDownloads);
+    if (QFile::exists(this->m_firmwareDirectoryName + this->m_firmwareFileName)) {
+        flashFirmware(this->m_firmwareDirectoryName + this->m_firmwareFileName);
+    } else {
+        DownloadsList firmwareDownloads;
+        firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".gz");
+        firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".md5");
+
+        connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+        this->m_progressDialog->startDownloads(firmwareDownloads);
+    }
 }
 
 void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
@@ -393,6 +406,8 @@ void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
         QFile::remove(downloadMd5.tmpFile);
         this->m_currentFirmwareDownloads = downloads;
         this->m_retrydownloads->start(10000);
+        QString dots = ".";
+        this->m_progressDialog->setLabelText(tr("Waiting for firmware") + dots.repeated(download.tries % 3));
         if (download.tries > 30) {
             QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware, try again later."));
         }
@@ -400,7 +415,46 @@ void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
 
         this->m_progressDialog->hide();
 
-        flashFirmware(download.tmpFile, downloadMd5.tmpFile);
+        //get md5 from server file
+        QFile md5File(downloadMd5.tmpFile);
+        md5File.open(QIODevice::ReadOnly);
+        QTextStream in(&md5File);
+        QString md5sumReference;
+        while(!in.atEnd()) {
+            QString line = in.readLine();
+            md5sumReference = line.left(32);
+            break;
+        }
+        md5File.close();
+        md5File.remove();
+
+        //calculate md5 from downloaded file
+        QFile hexFile(download.tmpFile);
+        hexFile.open(QIODevice::ReadOnly);
+
+        QByteArray data = hexFile.readAll();
+
+        //Check if file is gz compressed and decompress
+        if (data.count() >= 10 || data.at(0) == 0x1f) {
+            data = gzipDecompress(data);
+        }
+
+        QString md5sum = QString(QCryptographicHash::hash(data,QCryptographicHash::Md5).toHex());
+        hexFile.close();
+
+        if (md5sum != md5sumReference)
+        {
+            QMessageBox::critical(this, tr("FlashTool"), tr("The downloaded firmware looks corrupted, please try again."));
+            return;
+        }
+
+        QString hexFilename = this->m_firmwareDirectoryName + this->m_firmwareFileName;
+        hexFile.remove();
+        QFile finalHexFile(hexFilename);
+        finalHexFile.open(QIODevice::WriteOnly);
+        finalHexFile.write(data);
+        finalHexFile.close();;
+        flashFirmware(hexFilename);
     }
 }
 
@@ -412,44 +466,12 @@ void MainWindow::retryFirmwareDownload()
     this->m_progressDialog->startDownloads(this->m_currentFirmwareDownloads);
 }
 
-void MainWindow::flashFirmware(QString filename, QString md5Filename)
+void MainWindow::flashFirmware(QString filename)
 {
-    //get md5 from server file
-    QFile md5File(md5Filename);
-    md5File.open(QIODevice::ReadOnly);
-    QTextStream in(&md5File);
-    QString md5sumReference;
-    while(!in.atEnd()) {
-        QString line = in.readLine();
-        md5sumReference = line.left(32);
-        break;
-    }
-    md5File.close();
-    QFile::remove(md5Filename);
-
-    //calculate md5 from downloaded file
-    QFile hexFile(filename);
-    hexFile.open(QIODevice::ReadOnly);
-
-    QByteArray data = hexFile.readAll();
-
-    //Check if file is gz compressed and decompress
-    if (data.count() >= 10 || data.at(0) == 0x1f) {
-        data = gzipDecompress(data);
-    }
-
-    QString md5sum = QString(QCryptographicHash::hash(data,QCryptographicHash::Md5).toHex());
-    hexFile.close();
-
-    if (md5sum != md5sumReference)
-    {
-        QMessageBox::critical(this, tr("FlashTool"), tr("The downloaded firmware looks corrupted, please try again."));
+    if (!QFile::exists(filename)) {
+        QMessageBox::critical(this, tr("FlashTool"), tr("Firmware not found."));
         return;
     }
-
-    QString hexFilename = QDir::tempPath() + "/flashTool.hex";
-    QFile::remove(hexFilename);
-    QFile::rename(filename, hexFilename);
 
     QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
     QStringList arguments;
@@ -459,7 +481,7 @@ void MainWindow::flashFirmware(QString filename, QString md5Filename)
     arguments << "-P" + ui->cmbSerialPort->currentText();
     arguments << "-b115200";
     arguments << "-D";
-    arguments << "-Uflash:w:" + hexFilename + ":i";
+    arguments << "-Uflash:w:" + filename + ":i";
 
     this->m_avrdudeOutput = "";
     this->m_process = new QProcess;
@@ -585,6 +607,7 @@ void MainWindow::canceledDownloadFirmware()
 {
     this->m_retrydownloads->stop();
     disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
+    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
     QMessageBox::critical(this, tr("FlashTool"), tr("You either canceled the firmware download or the download timed out."));
 }
 

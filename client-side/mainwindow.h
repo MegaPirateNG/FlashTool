@@ -108,9 +108,11 @@ private:
     QString m_avrdudeOutput;
     DownloadsList m_currentFirmwareDownloads;
     QTimer *m_retrydownloads;
+    QString m_firmwareFileName;
+    QString m_firmwareDirectoryName;
     AboutDialog *m_aboutDlg;
 
-    void flashFirmware(QString filename, QString md5Filename);
+    void flashFirmware(QString filename);
     void parseAvrdudeOutput();
     QByteArray gzipDecompress(QByteArray compressData);
 };
