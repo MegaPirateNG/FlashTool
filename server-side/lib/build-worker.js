@@ -6,7 +6,17 @@ var git = require(__dirname + '/git'),
 
 process.on('message', function(payload) {
     Step(
-        function checkCommit() {
+        function checkExistingHEX() {
+        	fs.exists(payload.hexFile+'.gz', this);
+        },
+        function checkCommit(exists) {
+        	  if (exists) {
+	        	  process.send({msg: 'Firmware already built on prev task, fin'});
+              process.send('next');
+        	  	return;
+        	  }
+        	
+        	  process.send({msg: 'git fetch '+payload.config.version['src-repository']});
             git.fetch(payload.config.version['src-repository'], payload.path, this);
         },
         function cloned(status) {
@@ -28,9 +38,11 @@ process.on('message', function(payload) {
             fs.writeFile(payload.path + '/config.mk', makeConfig, this);
         },
         function build(status) {
+        	  process.send({msg: 'Build: '+payload.path + '/' + payload.config.version['src-dir']});
             exec('cd ' + payload.path + '/' + payload.config.version['src-dir'] + '; make mpng', this);
         },
         function copyHex(error, stdout, stderror) {
+        	  process.send({msg: 'Copy HEX'});
             var srcHex = payload.path + '/_build/' + payload.config.version['src-dir'] + '.hex',
                 dstHex = payload.hexFile;
             fs.copy(srcHex, dstHex, this);
@@ -39,15 +51,16 @@ process.on('message', function(payload) {
             var srcHex = payload.path + '/_build/' + payload.config.version['src-dir'] + '.hex';
             fs.remove(srcHex, this);
         },
-/*        function removeBuildDir(status) {
+        function removeBuildDir(status) {
             fs.remove(payload.path + '/_build/', this);
-        },*/
+        },
         function createMd5Hash(status) {
             var hexPath = path.dirname(payload.hexFile),
                 hexName = path.basename(payload.hexFile);
             exec('cd ' + hexPath + ';md5sum -b ' + hexName + ' > ' + hexName + '.md5', this);
         },
         function createGz(status) {
+        	  process.send({msg: 'Compress HEX: '+payload.hexFile});
             var hexPath = path.dirname(payload.hexFile),
                 hexName = path.basename(payload.hexFile);
             exec('cd ' + hexPath + ';gzip ' + hexName, this);

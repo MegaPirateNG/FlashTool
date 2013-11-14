@@ -5,7 +5,7 @@ var Queue  = require('forkqueue'),
     parser = new xml2js.Parser({explicitArray: false, mergeAttrs: true, explicitRoot: false}),
     fs = require('fs'),
     crypto = require('crypto'),
-    queue = new Queue(2,__dirname + '/build-worker'),
+    queue = new Queue(1,__dirname + '/build-worker'),
     os = require('os'),
     configData = {},
     hexFilePath = '';
@@ -20,6 +20,10 @@ var findConfigElementById = function(config, id) {
 };
 
 exports.init = function(configFile, publicPath) {
+    queue.on('msg', function (msg) {
+        logger.info(msg);
+    });
+    
     hexFilePath = publicPath + '/hex/';
     fs.readFile(configFile, function(err, data) {
         parser.parseString(data, function (err, result) {
