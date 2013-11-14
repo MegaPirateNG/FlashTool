@@ -35,5 +35,9 @@ FORMS    += mainwindow.ui \
 
 RC_FILE = windows_ico.rc
 
+TRANSLATIONS += \
+    resources/translations/mpng_flashtool_german.ts
+
 RESOURCES += \
-    images.qrc
+    images.qrc \
+    translations.qrc
