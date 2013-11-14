@@ -490,10 +490,11 @@ void MainWindow::flashFirmware(QString filename)
     connect(this->m_process,SIGNAL(readyReadStandardOutput()),this, SLOT(avrdudeReadStandardOutput()));
     connect(this->m_process,SIGNAL(readyReadStandardError()),this, SLOT(avrdudeReadStandardError()));
     connect(this->m_process,SIGNAL(finished(int)),this, SLOT(avrdudeFinished(int)));
+    connect(this->m_process,SIGNAL(error(QProcess::ProcessError)),this, SLOT(avrdudeError(QProcess::ProcessError)));
 
-    this->m_process->start(program, arguments);
     this->m_progressDialog->show();
     this->m_progressDialog->setLabelText(tr("Starting flashing process..."));
+    this->m_process->start(program, arguments);
 }
 
 
@@ -572,6 +573,32 @@ void MainWindow::parseAvrdudeOutput()
             this->m_progressDialog->setLabelText(tr("Verifying firmware please wait..."));
         }
     }
+}
+
+void MainWindow::avrdudeError(QProcess::ProcessError error)
+{
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+    this->m_progressDialog->hide();
+
+    QString errorMsg;
+
+    switch (error) {
+    case QProcess::FailedToStart:
+        errorMsg = tr("Failed to start avrdude. (executable missing?)");
+        break;
+    case QProcess::Crashed:
+        errorMsg = tr("avrdude crashed somehow.");
+        break;
+    case QProcess::Timedout:
+    case QProcess::ReadError:
+    case QProcess::WriteError:
+    case QProcess::UnknownError:
+    default:
+        errorMsg = tr("Some internal error occured. Errorcode: %1").arg(error);
+        break;
+    }
+
+    QMessageBox::critical(this, tr("FlashTool"), tr("An error occured with avrdude: \n\n%1").arg(errorMsg));
 }
 
 void MainWindow::avrdudeFinished(int exitCode)

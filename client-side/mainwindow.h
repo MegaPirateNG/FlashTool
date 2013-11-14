@@ -94,6 +94,7 @@ private slots:
     void avrdudeReadStandardOutput();
     void avrdudeReadStandardError();
     void avrdudeFinished(int exitCode);
+    void avrdudeError(QProcess::ProcessError error);
     void canceledFirmwareUpload();
     void retryFirmwareDownload();
     void about();
