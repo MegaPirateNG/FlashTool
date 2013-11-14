@@ -64,26 +64,20 @@ exports.handleBuildJob = function(req, callback) {
         },
         function gotCommit(commit) {
             var configHash = crypto.createHash('md5').update(JSON.stringify(buildConfig)).digest("hex"),
-                path = os.tmpdir() + '/' + configHash + '_' + commit,
+                path = buildConfig.version['src-path'],
                 hexFile = configHash + '_' + commit + '.hex';
 
             //Check if hexfile already exists
             fs.exists(hexFilePath + '/' + hexFile + '.gz', function(exists) {
-                if (!exists) {
-                    //Check if no current build for the same thing is in process
-                    fs.exists(path, function(exists) {
-                        if (!exists) {
-                            logger.info('Need to build hex file for config: ' + JSON.stringify(buildConfig));
-                            queue.enqueue({
-                                'config' : buildConfig,
-                                'commit' : commit,
-                                'hexFile' : hexFilePath + '/' + hexFile,
-                                'path' : path
-                            });
-                        }
-                    });
-
-                }
+		            if (!exists) {
+		                logger.info('Need to build hex file for config: ' + JSON.stringify(buildConfig));
+		                queue.enqueue({
+		                    'config' : buildConfig,
+		                    'commit' : commit,
+		                    'hexFile' : hexFilePath + '/' + hexFile,
+		                    'path' : path
+		                });
+		            }
             });
 
             callback(true, hexFile);

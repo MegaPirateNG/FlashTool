@@ -20,6 +20,12 @@ exports.clone = function(repro, path, callback) {
     });
 };
 
+exports.fetch = function(repro, path, callback) {
+    exec('cd ' + path + '; git fetch', function(error, stdout, stderr) {
+        callback(stdout);
+    });
+};
+
 exports.checkout = function(branch, path, callback) {
     exec('cd ' + path + ';git checkout ' + branch, function(error, stdout, stderr) {
         callback(stdout);
