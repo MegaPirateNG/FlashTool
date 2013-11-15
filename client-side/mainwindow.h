@@ -4,10 +4,10 @@
 #include <QMainWindow>
 #include <QMessageBox>
 #include "progressdialog.h"
-#include "qextserialport.h"
-#include "qextserialenumerator.h"
 #include <zlib.h>
 #include "aboutdialog.h"
+#include <QSerialPortInfo>
+#include <QSerialPort>
 
 #include <QtGui>
 

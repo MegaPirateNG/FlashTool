@@ -249,9 +249,9 @@ void MainWindow::updateSerialPorts()
 {
     ui->cmbSerialPort->clear();
     ui->cmbSerialPort->setDisabled(false);
-    foreach (QextPortInfo info, QextSerialEnumerator::getPorts()) {
-        if (!info.portName.isEmpty()) {
-            ui->cmbSerialPort->addItem(info.portName);
+    foreach (QSerialPortInfo info, QSerialPortInfo::availablePorts()) {
+        if (!info.portName().isEmpty()) {
+            ui->cmbSerialPort->addItem(info.portName());
         }
     }
 

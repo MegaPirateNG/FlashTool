@@ -1,5 +1,0 @@
-QMAKE_PRL_BUILD_DIR = /Users/user/src/qextserialport//
-QMAKE_PRO_INPUT = qextserialport.pro
-QMAKE_PRL_TARGET = libqextserialport_debug.1.2.0.dylib
-QMAKE_PRL_CONFIG = include_source_dir lex yacc warn_on debug uic resources sdk rez qt warn_on lib_version_first incremental plugin_no_soname link_prl app_bundle def_files_disabled exceptions no_mocdepend debug stl qt_framework x86_64 no_mocdepend create_prl shared absolute_library_soname objective_c x86_64 dll shared moc thread
-QMAKE_PRL_VERSION = 1.2.0

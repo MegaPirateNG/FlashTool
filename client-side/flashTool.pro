@@ -4,11 +4,7 @@
 #
 #-------------------------------------------------
 
-include(libs/qextserialport/src/qextserialport.pri)
-
-QT       += core gui network xml
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui network xml widgets serialport
 
 TARGET = flashTool
 TEMPLATE = app
