@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/translations">
         <file alias="mpng_flashtool_german.qm">resources/translations/mpng_flashtool_german.qm</file>
+        <file alias="mpng_flashtool_russian.qm">resources/translations/mpng_flashtool_russian.qm</file>
     </qresource>
 </RCC>

@@ -37,6 +37,7 @@ RC_FILE = windows_ico.rc
 
 TRANSLATIONS += \
     resources/translations/mpng_flashtool_german.ts
+    resources/translations/mpng_flashtool_russian.ts
 
 RESOURCES += \
     images.qrc \

@@ -58,9 +58,9 @@
    <widget class="QComboBox" name="cmbBoardType">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>200</x>
       <y>20</y>
-      <width>431</width>
+      <width>411</width>
       <height>22</height>
      </rect>
     </property>
@@ -70,7 +70,7 @@
      <rect>
       <x>90</x>
       <y>20</y>
-      <width>71</width>
+      <width>101</width>
       <height>16</height>
      </rect>
     </property>
@@ -83,7 +83,7 @@
      <rect>
       <x>90</x>
       <y>50</y>
-      <width>71</width>
+      <width>101</width>
       <height>16</height>
      </rect>
     </property>
@@ -94,9 +94,9 @@
    <widget class="QComboBox" name="cmbRCType">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>200</x>
       <y>50</y>
-      <width>211</width>
+      <width>191</width>
       <height>22</height>
      </rect>
     </property>
@@ -123,7 +123,7 @@
      <rect>
       <x>10</x>
       <y>120</y>
-      <width>281</width>
+      <width>301</width>
       <height>22</height>
      </rect>
     </property>
@@ -133,7 +133,7 @@
      <rect>
       <x>10</x>
       <y>100</y>
-      <width>171</width>
+      <width>301</width>
       <height>16</height>
      </rect>
     </property>
@@ -146,7 +146,7 @@
      <rect>
       <x>10</x>
       <y>250</y>
-      <width>101</width>
+      <width>281</width>
       <height>16</height>
      </rect>
     </property>
@@ -201,8 +201,8 @@
      <rect>
       <x>10</x>
       <y>200</y>
-      <width>46</width>
-      <height>13</height>
+      <width>271</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
@@ -214,7 +214,7 @@
      <rect>
       <x>10</x>
       <y>220</y>
-      <width>281</width>
+      <width>301</width>
       <height>22</height>
      </rect>
     </property>
@@ -224,7 +224,7 @@
      <rect>
       <x>220</x>
       <y>270</y>
-      <width>71</width>
+      <width>91</width>
       <height>23</height>
      </rect>
     </property>
@@ -270,7 +270,7 @@
      <rect>
       <x>160</x>
       <y>170</y>
-      <width>131</width>
+      <width>151</width>
       <height>22</height>
      </rect>
     </property>

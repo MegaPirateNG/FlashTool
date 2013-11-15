@@ -10,6 +10,8 @@ int main(int argc, char *argv[])
 
     QTranslator translator;
     translator.load(QString("mpng_flashtool_%1").arg(QLocale::languageToString(QLocale::system().language()).toLower()), ":/translations");
+    // Just to check translation on machine with other language
+//    translator.load(QString("mpng_flashtool_russian"), ":/translations");
     a.installTranslator(&translator);
 
     MainWindow w;
