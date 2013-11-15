@@ -94,7 +94,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../mainwindow.ui" line="209"/>
         <source>Version</source>
-        <translation></translation>
+        <translation>Version</translation>
     </message>
     <message>
         <location filename="../../mainwindow.ui" line="232"/>
@@ -179,7 +179,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../mainwindow.cpp" line="447"/>
         <source>The downloaded firmware looks corrupted, please try again.</source>
-        <translation>Die heruntergeladene Firmware scheint defek, bitte erneut versuchen.</translation>
+        <translation>Die heruntergeladene Firmware scheint defekt, bitte erneut versuchen.</translation>
     </message>
     <message>
         <location filename="../../mainwindow.cpp" line="472"/>
@@ -209,7 +209,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../mainwindow.cpp" line="587"/>
         <source>Failed to start avrdude. (executable missing?)</source>
-        <translation>Fehler beim starten von avrdude, fehlt die Ausführbare Datei?</translation>
+        <translation>Fehler beim starten von avrdude. (Fehlt die Ausführbare Datei?)</translation>
     </message>
     <message>
         <location filename="../../mainwindow.cpp" line="590"/>
@@ -244,104 +244,6 @@ p, li { white-space: pre-wrap; }
         <location filename="../../mainwindow.cpp" line="638"/>
         <source>You either canceled the firmware download or the download timed out.</source>
         <translation>Firmware download wurde abgebrochen oder ist wegen einer Zeitüberschreitung abgebrochen.</translation>
-    </message>
-</context>
-<context>
-    <name>QextSerialPort</name>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="718"/>
-        <source>No Error has occurred</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="720"/>
-        <source>Invalid file descriptor (port was not opened correctly)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="722"/>
-        <source>Unable to allocate memory tables (POSIX)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="724"/>
-        <source>Caught a non-blocked signal (POSIX)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="726"/>
-        <source>Operation timed out (POSIX)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="728"/>
-        <source>The file opened by the port is not a valid device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="730"/>
-        <source>The port detected a break condition</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="732"/>
-        <source>The port detected a framing error (usually caused by incorrect baud rate settings)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="734"/>
-        <source>There was an I/O error while communicating with the port</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="736"/>
-        <source>Character buffer overrun</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="738"/>
-        <source>Receive buffer overflow</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="740"/>
-        <source>The port detected a parity error in the received data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="742"/>
-        <source>Transmit buffer overflow</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="744"/>
-        <source>General read operation failure</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="746"/>
-        <source>General write operation failure</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="748"/>
-        <source>The %1 file doesn&apos;t exists</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="750"/>
-        <source>Permission denied</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="752"/>
-        <source>Device is already locked</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../libs/qextserialport/src/qextserialport.cpp" line="754"/>
-        <source>Unknown error: %1</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
