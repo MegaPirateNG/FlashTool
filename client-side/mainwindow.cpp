@@ -373,8 +373,8 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
     file->remove();
 
     if (!download.success) {
-        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
         this->m_progressDialog->hide();
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
         QMessageBox::critical(this, tr("FlashTool"), tr("An error occured on the build server: %1").arg(error));
         return;
     }
@@ -382,6 +382,7 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
     this->m_firmwareFileName = firmwareFile;
 
     if (QFile::exists(this->m_firmwareDirectoryName + this->m_firmwareFileName)) {
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
         flashFirmware(this->m_firmwareDirectoryName + this->m_firmwareFileName);
     } else {
         DownloadsList firmwareDownloads;
@@ -466,6 +467,12 @@ void MainWindow::retryFirmwareDownload()
     this->m_progressDialog->startDownloads(this->m_currentFirmwareDownloads);
 }
 
+void MainWindow::updateProgress(int bytes, int bytesTotal)
+{
+    this->m_progressDialog->setMaximum(bytesTotal);
+    this->m_progressDialog->setValue(bytes);
+}
+
 void MainWindow::flashFirmware(QString filename)
 {
     if (!QFile::exists(filename)) {
@@ -473,30 +480,57 @@ void MainWindow::flashFirmware(QString filename)
         return;
     }
 
-    QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
-    QStringList arguments;
-    arguments << "-C" + qApp->applicationDirPath() + "/external/avrdude.conf";
-    arguments << "-patmega2560";
-    arguments << "-cstk500v2";
-    arguments << "-P" + ui->cmbSerialPort->currentText();
-    arguments << "-b115200";
-    arguments << "-D";
-    arguments << "-Uflash:w:" + filename + ":i";
-
-    this->m_avrdudeOutput = "";
-    this->m_process = new QProcess;
-
     connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
-    connect(this->m_process,SIGNAL(readyReadStandardOutput()),this, SLOT(avrdudeReadStandardOutput()));
-    connect(this->m_process,SIGNAL(readyReadStandardError()),this, SLOT(avrdudeReadStandardError()));
-    connect(this->m_process,SIGNAL(finished(int)),this, SLOT(avrdudeFinished(int)));
-    connect(this->m_process,SIGNAL(error(QProcess::ProcessError)),this, SLOT(avrdudeError(QProcess::ProcessError)));
-
     this->m_progressDialog->show();
-    this->m_progressDialog->setLabelText(tr("Starting flashing process..."));
-    this->m_process->start(program, arguments);
-}
+    this->m_progressDialog->setLabelText(tr("Loading firmware file..."));
+    ArduinoIntelHex hexdata;
+    hexdata.loadIntelHex(filename);
 
+    if (hexdata.length() == 0) {
+        QMessageBox::critical(this, tr("FlashTool"), tr("Firmware hex file looks corrupted, please try again"));
+        this->m_progressDialog->hide();
+        return;
+    }
+
+    ArduinoStk500v2 *serial = new ArduinoStk500v2();
+    connect(serial, SIGNAL(readingFlash(int, int)), this, SLOT(updateProgress(int,int)));
+    connect(serial, SIGNAL(writingFlash(int, int)), this, SLOT(updateProgress(int,int)));
+
+    serial->setPortName(ui->cmbSerialPort->currentText());
+
+    if (serial->PgmInit()) {
+        QByteArray chipAtmega2560((const char[]){0x1e, 0x98, 0x01}, 3);
+        QByteArray chip = serial->PgmGetChipType();
+        if (chipAtmega2560 != chip) {
+            QMessageBox::critical(this, tr("FlashTool"), tr("Invalid board detected, please check your connections."));
+            disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+            this->m_progressDialog->hide();
+            return;
+        }
+
+        this->m_progressDialog->setLabelText(tr("Writing firmware please wait..."));
+        serial->PgmSeek(0);
+
+        serial->PgmWrite(hexdata);
+
+        this->m_progressDialog->setLabelText(tr("Verifying firmware please wait..."));
+        serial->PgmSeek(0);
+        QByteArray data = serial->PgmRead(hexdata.length());
+        if (data != hexdata) {
+            QMessageBox::critical(this, tr("FlashTool"), tr("Firmware verification failed!"));
+        } else {
+            QMessageBox::information(this, tr("FlashTool"), tr("Firmware flashed successfully!"));
+        }
+        this->m_progressDialog->hide();
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+        serial->PgmClose();
+    } else {
+        QMessageBox::critical(this, tr("FlashTool"), tr("Failed to connect to board, check your connections."));
+        this->m_progressDialog->hide();
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+        return;
+    }
+}
 
 QByteArray MainWindow::gzipDecompress(QByteArray compressData)
 {
@@ -551,84 +585,9 @@ QByteArray MainWindow::gzipDecompress(QByteArray compressData)
 void MainWindow::canceledFirmwareUpload()
 {
     disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
-    this->m_process->kill();
-    QMessageBox::critical(this, tr("FlashTool"), tr("You canceled the firmware upload!"));
+    QMessageBox::information(this, tr("FlashTool"), tr("You can't cancel the firmware upload."));
 }
 
-void MainWindow::parseAvrdudeOutput()
-{
-    QString output = this->m_avrdudeOutput;
-    qDebug()<<output;
-    this->m_progressDialog->setMaximum(50);
-
-    if (output.contains("AVR device initialized and ready to accept instructions")) {
-
-        if (!output.contains("bytes of flash written")) {
-            QString writing = output.mid(output.lastIndexOf("Writing |"), 61);
-            this->m_progressDialog->setValue(writing.count("#"));
-            this->m_progressDialog->setLabelText(tr("Writing firmware please wait..."));
-        } else {
-            QString reading = output.mid(output.lastIndexOf("Reading |"), 61);
-            this->m_progressDialog->setValue(reading.count("#"));
-            this->m_progressDialog->setLabelText(tr("Verifying firmware please wait..."));
-        }
-    }
-}
-
-void MainWindow::avrdudeError(QProcess::ProcessError error)
-{
-    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
-    this->m_progressDialog->hide();
-
-    QString errorMsg;
-
-    switch (error) {
-    case QProcess::FailedToStart:
-        errorMsg = tr("Failed to start avrdude. (executable missing?)");
-        break;
-    case QProcess::Crashed:
-        errorMsg = tr("avrdude crashed somehow.");
-        break;
-    case QProcess::Timedout:
-    case QProcess::ReadError:
-    case QProcess::WriteError:
-    case QProcess::UnknownError:
-    default:
-        errorMsg = tr("Some internal error occured. Errorcode: %1").arg(error);
-        break;
-    }
-
-    QMessageBox::critical(this, tr("FlashTool"), tr("An error occured with avrdude: \n\n%1").arg(errorMsg));
-}
-
-void MainWindow::avrdudeFinished(int exitCode)
-{
-    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
-
-    this->m_progressDialog->hide();
-    if (exitCode == 0) {
-        QMessageBox::information(this, tr("FlashTool"), tr("Firmware flashed successfully!"));
-    } else {
-        QString errorFilename = qApp->applicationDirPath() + "/error.txt";
-        QFile errorFile(errorFilename);
-        errorFile.open(QIODevice::ReadWrite);
-        errorFile.write(this->m_avrdudeOutput.toLatin1());
-        errorFile.close();
-        QMessageBox::critical(this, tr("FlashTool"), tr("Flashing failed, please consulte the error.txt file located here: %1").arg(errorFilename));
-    }
-}
-
-void MainWindow::avrdudeReadStandardOutput()
-{
-    this->m_avrdudeOutput.append(this->m_process->readAllStandardOutput());
-    this->parseAvrdudeOutput();
-}
-
-void MainWindow::avrdudeReadStandardError()
-{
-    this->m_avrdudeOutput.append(this->m_process->readAllStandardError());
-    this->parseAvrdudeOutput();
-}
 
 void MainWindow::canceledDownloadFirmware()
 {

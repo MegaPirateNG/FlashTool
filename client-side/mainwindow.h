@@ -8,7 +8,8 @@
 #include "aboutdialog.h"
 #include <QSerialPortInfo>
 #include <QSerialPort>
-
+#include "arduino_intelhex.h"
+#include "arduino_stk500v2.h"
 #include <QtGui>
 
 struct BoardType
@@ -91,10 +92,7 @@ private slots:
     void downloadFinishedFirmware(DownloadsList downloads);
     void firmwareRequestDone(DownloadsList downloads);
     void canceledDownloadFirmware();
-    void avrdudeReadStandardOutput();
-    void avrdudeReadStandardError();
-    void avrdudeFinished(int exitCode);
-    void avrdudeError(QProcess::ProcessError error);
+    void updateProgress(int bytes, int bytesTotal);
     void canceledFirmwareUpload();
     void retryFirmwareDownload();
     void about();

@@ -19,11 +19,15 @@ DEFINES += FLASHTOOL_VERSION=\\\"$$FLASHTOOL_VERSION\\\"
 SOURCES += main.cpp\
         mainwindow.cpp \
     progressdialog.cpp \
-    aboutdialog.cpp
+    aboutdialog.cpp \
+    arduino_stk500v2.cpp \
+    arduino_intelhex.cpp
 
 HEADERS  += mainwindow.h \
     progressdialog.h \
-    aboutdialog.h
+    aboutdialog.h \
+    arduino_stk500v2.h \
+    arduino_intelhex.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui
