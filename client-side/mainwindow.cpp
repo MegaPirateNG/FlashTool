@@ -382,6 +382,7 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
     this->m_firmwareFileName = firmwareFile;
 
     if (QFile::exists(this->m_firmwareDirectoryName + this->m_firmwareFileName)) {
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
         flashFirmware(this->m_firmwareDirectoryName + this->m_firmwareFileName);
     } else {
         DownloadsList firmwareDownloads;
