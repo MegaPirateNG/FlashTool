@@ -477,13 +477,13 @@ void MainWindow::flashFirmware(QString filename)
     QStringList arguments;
     arguments << "-C" + qApp->applicationDirPath() + "/external/avrdude.conf";
     arguments << "-patmega2560";
-    arguments << "-cstk500v2";
+    arguments << "-cwiring";
     arguments << "-P" + ui->cmbSerialPort->currentText();
     arguments << "-b115200";
     arguments << "-D";
     arguments << "-Uflash:w:" + filename + ":i";
 
-    this->m_avrdudeOutput = "";
+    this->m_avrdudeOutput = ">" + program + " " + arguments.join(" ");
     this->m_process = new QProcess;
 
     connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
