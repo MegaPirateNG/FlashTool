@@ -52,7 +52,7 @@
 		<version platform="copter" number="3.0.1-R3 Beta" id="3.0.1-rc3" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r3" src-dir="ArduCopter"/>
 		<version platform="plane" number="2.74b" id="2.74b" src-path="/home/builder/smurfy" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.74b" src-dir="ArduPlane"/>
 		<version platform="plane" number="2.76" id="2.76" src-path="/home/builder/smurfy" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.76" src-dir="ArduPlane"/>
-		<version platform="plane" number="2.74b R3 Beta " id="2.74R3b" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r3" src-dir="ArduPilot"/>
+		<version platform="plane" number="2.74b R3 Beta " id="2.74R3b" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r3" src-dir="ArduPlane"/>
 	</versions>
 
 </xml>
