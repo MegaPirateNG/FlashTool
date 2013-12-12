@@ -69,17 +69,17 @@ exports.handleBuildJob = function(req, callback) {
         function gotCommit(commit) {
             var configHash = crypto.createHash('md5').update(JSON.stringify(buildConfig)).digest("hex"),
                 path = buildConfig.version['src-path'],
-                hexFile = configHash + '_' + commit + '.hex';
-                hexFilePath = hexFilePath + hexFile;
+                hexFile = configHash + '_' + commit + '.hex',
+                hexFileF = hexFilePath + hexFile;
 
             //Check if hexfile already exists
-            fs.exists(hexFilePath  + '.gz', function(exists) {
+            fs.exists(hexFileF  + '.gz', function(exists) {
 		            if (!exists) {
 		                logger.info('Need to build hex file for config: ' + JSON.stringify(buildConfig));
 		                queue.enqueue({
 		                    'config' : buildConfig,
 		                    'commit' : commit,
-		                    'hexFile' : hexFilePath,
+		                    'hexFile' : hexFileF,
 		                    'path' : path
 		                });
 		            }
