@@ -47,7 +47,7 @@ process.on('message', function(payload) {
             'HAL_BOARD ?= HAL_BOARD_MPNG\n' +
             'PORT = /dev/ttyACM0\n' +
             'BUILDROOT = ' + payload.path + '/_build' + '\n' +
-            'EXTRAFLAGS += -DTHISFIRMWARE="' + payload.config.version['src-dir'] + ' ' + payload.config.version['number'] + ' (' + payload.commit.substr(0, 7) + ')"\n';
+            'EXTRAFLAGS += -DTHISFIRMWARE="\\"' + payload.config.version['src-dir'] + ' ' + payload.config.version['number'] + ' (' + payload.commit.substr(0, 7) + ')\\""\n';
             for (var name in payload.config) {
                 if (payload.config[name]['src-flags']) {
                     makeConfig += '#' + name + '\n';
@@ -64,6 +64,7 @@ process.on('message', function(payload) {
             process.send({msg: 'Copy HEX'});
             var srcHex = payload.path + '/_build/' + payload.config.version['src-dir'] + '.hex',
                 dstHex = payload.hexFile;
+            process.send({msg: 'Copy HEX from:'+srcHex +'  TO:'+dstHex});
             fs.copy(srcHex, dstHex, this);
         },
         function removeHexFile(status) {

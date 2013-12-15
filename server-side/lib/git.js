@@ -27,7 +27,7 @@ exports.fetch = function(repro, path, callback) {
 };
 
 exports.checkout = function(branch, path, callback) {
-    exec('cd ' + path + ';git checkout ' + branch, function(error, stdout, stderr) {
+    exec('cd ' + path + ';git checkout -f ' + branch, function(error, stdout, stderr) {
         callback(stdout);
     });
 };
