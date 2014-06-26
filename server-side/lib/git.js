@@ -10,6 +10,13 @@ exports.latestCommit = function(repro, branch, callback) {
                 return;
             }
         }
+        for (var i = 0; i < repoList.length; i++) {
+            var result = repoList[i].match(/(.*)\trefs\/tags\/(.*)/);
+            if (result && result.length > 2 && result[2] == branch) {
+                callback(result[1]);
+                return;
+            }
+        }
         callback(null);
     });
 };
