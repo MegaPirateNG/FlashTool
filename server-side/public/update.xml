@@ -51,9 +51,10 @@
 	</gps>
 
 	<versions>
-	        <version platform="copter" number="3.0.1-R4" id="3.0.1-rc4" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduCopter"/>
-		<version platform="plane" number="2.76" id="2.76" src-path="/home/builder/smurfy" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.76" src-dir="ArduPlane"/>
-		<version platform="plane" number="2.74b R4 Beta " id="2.74R3b" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduPlane"/>
+	    <version platform="copter" number="3.0.1-R4" id="3.0.1-rc4" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduCopter"/>
+	    <version platform="plane" number="2.76" id="2.76" src-path="/home/builder/smurfy" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.76" src-dir="ArduPlane"/>
+	    <version platform="plane" number="2.74b R4 Beta " id="2.74R3b" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduPlane"/>
+	    <version platform="copter" number="3.1.5-R2 Beta!!!" id="3.1.5-R2" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.1.5-R2" src-dir="ArduCopter"/>
 	</versions>
 
 </xml>
