@@ -10,8 +10,8 @@ TARGET = flashTool
 TEMPLATE = app
 LIBS += -lz
 
-FLASHTOOL_PATH_URI = http://fw.megapirateng.com:8888/update.xml
-FLASHTOOL_VERSION = 1.0
+FLASHTOOL_PATH_URI = http://localhost:8000/update.xml
+FLASHTOOL_VERSION = 1.1
 
 DEFINES += FLASHTOOL_PATH_URI=\\\"$$FLASHTOOL_PATH_URI\\\"
 DEFINES += FLASHTOOL_VERSION=\\\"$$FLASHTOOL_VERSION\\\"
@@ -19,11 +19,13 @@ DEFINES += FLASHTOOL_VERSION=\\\"$$FLASHTOOL_VERSION\\\"
 SOURCES += main.cpp\
         mainwindow.cpp \
     progressdialog.cpp \
-    aboutdialog.cpp
+    aboutdialog.cpp \
+    F4BYFirmwareUploader.cc
 
 HEADERS  += mainwindow.h \
     progressdialog.h \
-    aboutdialog.h
+    aboutdialog.h \
+    F4BYFirmwareUploader.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui

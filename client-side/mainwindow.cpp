@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "F4BYFirmwareUploader.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -104,6 +105,11 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
                         board.showInputs = xml.attributes().value("showInputs").toString().toInt();
                     if(xml.attributes().hasAttribute("showGPS"))
                         board.showGPS = xml.attributes().value("showGPS").toString().toInt();
+
+                    if(xml.attributes().hasAttribute("useBootloader"))
+                    {
+                        board.useBootloader = xml.attributes().value("useBootloader").toString().toInt();
+                    }
 
                     if (board.id == oldBoardType) {
                         oldBoardTypeIndex = ui->cmbBoardType->count();
@@ -337,8 +343,42 @@ void MainWindow::boardChanged(int index)
 
 }
 
+void MainWindow::firmwareDownloadProgress(qint64 cur, qint64 all)
+{
+    ui->progressBar->setMaximum(all);
+    ui->progressBar->setValue(cur);
+}
+
+void MainWindow::requestDeviceReplug()
+{
+    m_progressDialog->show();
+}
+
+void MainWindow::devicePlugDetected()
+{
+    m_progressDialog->hide();
+}
+
+void MainWindow::px4StatusUpdate(QString status)
+{
+    ui->textBrowser->append(status);
+}
+
 void MainWindow::startFlash()
 {
+    F4BYFirmwareUploader* m_px4uploader = new F4BYFirmwareUploader();
+    connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
+    //connect(m_px4uploader,SIGNAL(debugUpdate(QString)),this,SLOT(px4DebugUpdate(QString)));
+    //connect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
+    connect(m_px4uploader,SIGNAL(flashProgress(qint64,qint64)),this,SLOT(firmwareDownloadProgress(qint64,qint64)));
+    //connect(m_px4uploader,SIGNAL(error(QString)),this,SLOT(px4Error(QString)));
+    //connect(m_px4uploader,SIGNAL(warning(QString)),this,SLOT(px4Warning(QString)));
+    //connect(m_px4uploader,SIGNAL(done()),this,SLOT(px4Finished()));
+    connect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(requestDeviceReplug()));
+    connect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(devicePlugDetected()));
+    m_px4uploader->loadFile("/Volumes/Macintosh/Work/Projects/F4BY/PX4Firmware/Images/f4by_APM.px4");
+    return;
+
     if (!ui->cmbSerialPort->isEnabled())
     {
         QMessageBox::critical(this, tr("FlashTool"), tr("No serial port found, please make sure you connected your board via usb."));

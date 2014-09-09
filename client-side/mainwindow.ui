@@ -59,7 +59,7 @@
     <property name="geometry">
      <rect>
       <x>200</x>
-      <y>90</y>
+      <y>80</y>
       <width>411</width>
       <height>22</height>
      </rect>
@@ -69,7 +69,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>90</y>
+      <y>80</y>
       <width>101</width>
       <height>16</height>
      </rect>
@@ -308,6 +308,29 @@
     </property>
     <property name="text">
      <string>About</string>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>420</y>
+      <width>371</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QTextBrowser" name="textBrowser">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>450</y>
+      <width>391</width>
+      <height>131</height>
+     </rect>
     </property>
    </widget>
   </widget>

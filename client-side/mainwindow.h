@@ -15,7 +15,8 @@ struct BoardType
 {
     BoardType() :
         showInputs(true),
-        showGPS(true)
+        showGPS(true),
+        useBootloader(false)
     {
 
     }
@@ -24,6 +25,7 @@ struct BoardType
     QString name;
     bool showInputs;
     bool showGPS;
+    bool useBootloader;
 };
 Q_DECLARE_METATYPE(BoardType)
 
@@ -93,6 +95,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void devicePlugDetected();
     void updateSerialPorts();
     void updateConfigs();
     void downloadFinishedConfigs(DownloadsList downloads);
@@ -108,7 +111,10 @@ private slots:
     void avrdudeError(QProcess::ProcessError error);
     void canceledFirmwareUpload();
     void retryFirmwareDownload();
+    void firmwareDownloadProgress(qint64 all, qint64 cur);
+    void requestDeviceReplug();
     void about();
+    void px4StatusUpdate(QString status);
 
 private:
     Ui::MainWindow *ui;
