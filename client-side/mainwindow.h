@@ -13,8 +13,17 @@
 
 struct BoardType
 {
+    BoardType() :
+        showInputs(true),
+        showGPS(true)
+    {
+
+    }
+
     QString id;
     QString name;
+    bool showInputs;
+    bool showGPS;
 };
 Q_DECLARE_METATYPE(BoardType)
 
@@ -60,6 +69,7 @@ struct Version
     QString id;
     QString platform;
     QString number;
+    QStringList boards;
 };
 typedef QList<Version> VersionsList;
 Q_DECLARE_METATYPE(Version)
@@ -87,6 +97,7 @@ private slots:
     void updateConfigs();
     void downloadFinishedConfigs(DownloadsList downloads);
     void platformChanged(int index);
+    void boardChanged(int index);
     void startFlash();
     void downloadFinishedFirmware(DownloadsList downloads);
     void firmwareRequestDone(DownloadsList downloads);

@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->m_retrydownloads, SIGNAL(timeout()), this, SLOT(retryFirmwareDownload()));
     connect(ui->btnSerialRefresh, SIGNAL(clicked()), SLOT(updateSerialPorts()));
     connect(ui->cmbPlatform, SIGNAL(currentIndexChanged(int)), SLOT(platformChanged(int)));
+    connect(ui->cmbBoardType, SIGNAL(currentIndexChanged(int)), SLOT(boardChanged(int)));
     connect(ui->btnFlash, SIGNAL(clicked()), SLOT(startFlash()));
     connect(ui->btnAbout, SIGNAL(clicked()), SLOT(about()));
 
@@ -55,6 +56,9 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
         return;
     }
 
+    //QMessageBox::critical(this, download.tmpFile, download.tmpFile);
+
+
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedConfigs(DownloadsList)));
 
     QString oldBoardType = this->m_settings.value("BoardType").toString();
@@ -95,6 +99,11 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
                     BoardType board;
                     board.name = xml.attributes().value("name").toString().simplified();
                     board.id = xml.attributes().value("id").toString().simplified();
+
+                    if(xml.attributes().hasAttribute("showInputs"))
+                        board.showInputs = xml.attributes().value("showInputs").toString().toInt();
+                    if(xml.attributes().hasAttribute("showGPS"))
+                        board.showGPS = xml.attributes().value("showGPS").toString().toInt();
 
                     if (board.id == oldBoardType) {
                         oldBoardTypeIndex = ui->cmbBoardType->count();
@@ -151,7 +160,7 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
         //Platforms
         if (xml.isStartElement() && (xml.name() == "platforms")) {
             ui->cmbPlatform->clear();
-            while (!xml.atEnd()) {
+                while (!xml.atEnd()) {
                 xml.readNext();
                 if (xml.isStartElement() && (xml.name() == "platform")) {
                     Platform platform;
@@ -222,6 +231,11 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
                     version.number = xml.attributes().value("number").toString().simplified();
                     version.id = xml.attributes().value("id").toString().simplified();
                     version.platform = xml.attributes().value("platform").toString().simplified();
+                    if(xml.attributes().hasAttribute("boards"))
+                    {
+                        QString boards = xml.attributes().value("boards").toString().simplified();
+                        version.boards = boards.split(',', QString::SkipEmptyParts);
+                    }
                     this->m_versionList<<version;
                 }
                 if (xml.isEndElement() && (xml.name() == "versions")) {
@@ -267,6 +281,8 @@ void MainWindow::platformChanged(int index)
     QString oldVersion = this->m_settings.value("Version").toString();
     int oldVersionIndex = 0;
 
+    BoardType boardType = ui->cmbBoardType->currentData().value<BoardType>();
+
     Platform platform = ui->cmbPlatform->itemData(index).value<Platform>();
     ui->lblImage->setStyleSheet("background: transparent url(:/images/resources/" + platform.image + ") center 0 no-repeat;");
     ui->cmbVersion->clear();
@@ -276,12 +292,27 @@ void MainWindow::platformChanged(int index)
         Version version = this->m_versionList[i];
         if (version.platform == platform.version)
         {
-            if (version.id == oldVersion) {
-                oldVersionIndex = ui->cmbVersion->count();
+            if(!version.boards.empty())
+            {
+                if(version.boards.indexOf(boardType.id) != -1)
+                {
+                    if (version.id == oldVersion) {
+                    oldVersionIndex = ui->cmbVersion->count();
+                    }
+                    QVariant vVersion;
+                    vVersion.setValue<Version>(version);
+                    ui->cmbVersion->addItem(version.number, vVersion);
+                }
             }
-            QVariant vVersion;
-            vVersion.setValue<Version>(version);
-            ui->cmbVersion->addItem(version.number, vVersion);
+            else
+            {
+               if (version.id == oldVersion) {
+                    oldVersionIndex = ui->cmbVersion->count();
+                }
+                QVariant vVersion;
+                vVersion.setValue<Version>(version);
+                ui->cmbVersion->addItem(version.number, vVersion);
+            }
         }
     }
 
@@ -292,6 +323,18 @@ void MainWindow::platformChanged(int index)
     } else {
         ui->cmbVersion->setCurrentIndex(oldVersionIndex);
     }
+}
+
+void MainWindow::boardChanged(int index)
+{
+    BoardType boardType = ui->cmbBoardType->itemData(index).value<BoardType>();
+    platformChanged(ui->cmbPlatform->currentIndex());
+    ui->cmbGpsType->setEnabled(boardType.showGPS);
+    ui->cmbGpsBaud->setEnabled(boardType.showGPS);
+
+    ui->cmbRCType->setEnabled(boardType.showInputs);
+    ui->cmbRCMapping->setEnabled(boardType.showInputs);
+
 }
 
 void MainWindow::startFlash()
