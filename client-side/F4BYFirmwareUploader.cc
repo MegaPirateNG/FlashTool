@@ -9,6 +9,7 @@
 
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QMessageBox>
 
 
 #define PROTO_OK 0x10
@@ -55,6 +56,12 @@ static const quint32 crctab[] =
     0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf,
     0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
+
+const char *NSH_INIT            = "\x0d\x0d\x0d";
+const char *NSH_REBOOT_BL       = "reboot -b\n";
+const char *NSH_REBOOT          = "reboot\n";
+const char MAVLINK_REBOOT_ID1[]  = {"\xfe\x21\x72\xff\x00\x4c\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x00\x00\x48\xf0"};
+const char MAVLINK_REBOOT_ID0[]  = {"\xfe\x21\x45\xff\x00\x4c\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x00\x00\x00\xd7\xac"};
 
 static quint32 crc32(const QByteArray src)
 {
@@ -116,6 +123,34 @@ int F4BYFirmwareUploader::readBytes(int num,int timeout,QByteArray &buf)
     }
     //QLOG_DEBUG() << "timeout expired:" << m_serialBuffer.size() << num;
     return -1;
+}
+
+bool F4BYFirmwareUploader::rebootBoard(const QString &portName)
+{
+    std::auto_ptr<QSerialPort> serialPort(new QSerialPort());
+    msleep(500);
+    serialPort->setPortName(portName);
+    if(!serialPort->open(QIODevice::ReadWrite))
+    {
+        emit error("Cannot open port.");
+        serialPort->close();
+        return false;
+    }
+    serialPort->setBaudRate(QSerialPort::Baud115200);
+    serialPort->setDataBits(QSerialPort::Data8);
+    serialPort->setStopBits(QSerialPort::OneStop);
+    serialPort->setParity(QSerialPort::NoParity);
+    serialPort->setFlowControl(QSerialPort::NoFlowControl);
+    serialPort->setTextModeEnabled(false);
+    serialPort->write(NSH_INIT, strlen(NSH_INIT) - 1);
+    serialPort->write(NSH_REBOOT_BL, strlen(NSH_REBOOT_BL) - 1);
+    serialPort->write(NSH_INIT, strlen(NSH_INIT) - 1);
+    serialPort->write(NSH_REBOOT, strlen(NSH_REBOOT) - 1);
+    serialPort->write(MAVLINK_REBOOT_ID1, sizeof(MAVLINK_REBOOT_ID1) - 1);
+    serialPort->write(MAVLINK_REBOOT_ID0, sizeof(MAVLINK_REBOOT_ID0) - 1);
+    serialPort->waitForBytesWritten(1000);
+    serialPort->close();
+    return true;
 }
 
 void F4BYFirmwareUploader::stop()
@@ -209,16 +244,32 @@ bool F4BYFirmwareUploader::loadFile(QString file)
 
 void F4BYFirmwareUploader::run()
 {
-    //QLOG_INFO() << "Waiting for device to be plugged in...";
-    emit requestDevicePlug();
+    //emit requestDevicePlug();
     bool found = false;
     QList<QString> portlist;
     QString portnametouse = "";
     int size = 0;
+    int devicesCount = 0;
+    int deviceIndex = -1;
     foreach (QSerialPortInfo info,QSerialPortInfo::availablePorts())
     {
+        if(info.hasVendorIdentifier() && info.vendorIdentifier() == 0x26AC && info.hasProductIdentifier() && info.productIdentifier() == 0x0010)
+        {
+            ++devicesCount;
+            deviceIndex = portlist.size();
+        }
         portlist.append(info.portName());
     }
+
+    if(devicesCount == 1 && deviceIndex != -1)
+    {
+        portnametouse = portlist[deviceIndex];
+        emit statusUpdate("Board found. Trying to reboot");
+        found = rebootBoard(portnametouse);
+    }
+    if(!found)
+        emit requestDevicePlug();
+
     size = portlist.size();
     while (!found)
     {

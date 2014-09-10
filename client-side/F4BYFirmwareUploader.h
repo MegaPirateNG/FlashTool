@@ -24,6 +24,7 @@ private:
     int get_sync(int timeout=1000);
     bool reqInfo(unsigned char infobyte,unsigned int *reply);
     int readBytes(int num,int timeout,QByteArray &buf);
+    bool rebootBoard(const QString& portName);
     unsigned int m_loadedBoardID;
     unsigned int m_loadedFwSize;
     QString m_loadedDescription;

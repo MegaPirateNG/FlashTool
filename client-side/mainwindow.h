@@ -10,6 +10,7 @@
 #include <QSerialPort>
 
 #include <QtGui>
+#include "F4BYFirmwareUploader.h"
 
 struct BoardType
 {
@@ -95,7 +96,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void devicePlugDetected();
+
     void updateSerialPorts();
     void updateConfigs();
     void downloadFinishedConfigs(DownloadsList downloads);
@@ -111,10 +112,17 @@ private slots:
     void avrdudeError(QProcess::ProcessError error);
     void canceledFirmwareUpload();
     void retryFirmwareDownload();
-    void firmwareDownloadProgress(qint64 all, qint64 cur);
-    void requestDeviceReplug();
+    void px4firmwareDownloadProgress(qint64 all, qint64 cur);
     void about();
+
     void px4StatusUpdate(QString status);
+    void px4devicePlugDetected();
+    void px4requestDeviceReplug();
+    void px4Terminated();
+    void px4Finished();
+    void px4Error(QString error);
+    void px4Warning(QString warning);
+    void px4firmwareUpdateCancelled();
 
 private:
     Ui::MainWindow *ui;
@@ -129,6 +137,7 @@ private:
     QString m_firmwareFileName;
     QString m_firmwareDirectoryName;
     AboutDialog *m_aboutDlg;
+    F4BYFirmwareUploader* m_px4uploader;
 
     void flashFirmware(QString filename);
     void parseAvrdudeOutput();

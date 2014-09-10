@@ -4,7 +4,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_px4uploader(0)
 {
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
@@ -343,41 +344,82 @@ void MainWindow::boardChanged(int index)
 
 }
 
-void MainWindow::firmwareDownloadProgress(qint64 cur, qint64 all)
+void MainWindow::px4firmwareDownloadProgress(qint64 cur, qint64 all)
 {
-    ui->progressBar->setMaximum(all);
-    ui->progressBar->setValue(cur);
+    this->m_progressDialog->setMaximum(all);
+    this->m_progressDialog->setValue(cur);
 }
 
-void MainWindow::requestDeviceReplug()
+void MainWindow::px4requestDeviceReplug()
 {
+    m_progressDialog->setLabelText("Please unplug, and plug back in the F4BY");
     m_progressDialog->show();
 }
 
-void MainWindow::devicePlugDetected()
+void MainWindow::px4devicePlugDetected()
 {
-    m_progressDialog->hide();
+    //m_progressDialog->hide();
 }
 
 void MainWindow::px4StatusUpdate(QString status)
 {
-    ui->textBrowser->append(status);
+    m_progressDialog->setLabelText(status);
+}
+
+void MainWindow::px4Terminated()
+{
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(px4firmwareUpdateCancelled()));
+    m_progressDialog->hide();
+
+    disconnect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
+    disconnect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
+    disconnect(m_px4uploader,SIGNAL(flashProgress(qint64,qint64)),this,SLOT(px4firmwareDownloadProgress(qint64,qint64)));
+    disconnect(m_px4uploader,SIGNAL(error(QString)),this,SLOT(px4Error(QString)));
+    disconnect(m_px4uploader,SIGNAL(warning(QString)),this,SLOT(px4Warning(QString)));
+    disconnect(m_px4uploader,SIGNAL(done()),this,SLOT(px4Finished()));
+    disconnect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(px4requestDeviceReplug()));
+    disconnect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(px4devicePlugDetected()));
+
+
+    if (m_px4uploader)
+    {
+        m_px4uploader->deleteLater();
+        m_px4uploader = 0;
+    }
+}
+
+void MainWindow::px4firmwareUpdateCancelled()
+{
+    if(!m_px4uploader)
+        return;
+    m_px4uploader->stop();
+    m_px4uploader->wait(250);
 }
 
 void MainWindow::startFlash()
 {
-    F4BYFirmwareUploader* m_px4uploader = new F4BYFirmwareUploader();
-    connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
-    //connect(m_px4uploader,SIGNAL(debugUpdate(QString)),this,SLOT(px4DebugUpdate(QString)));
-    //connect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
-    connect(m_px4uploader,SIGNAL(flashProgress(qint64,qint64)),this,SLOT(firmwareDownloadProgress(qint64,qint64)));
-    //connect(m_px4uploader,SIGNAL(error(QString)),this,SLOT(px4Error(QString)));
-    //connect(m_px4uploader,SIGNAL(warning(QString)),this,SLOT(px4Warning(QString)));
-    //connect(m_px4uploader,SIGNAL(done()),this,SLOT(px4Finished()));
-    connect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(requestDeviceReplug()));
-    connect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(devicePlugDetected()));
-    m_px4uploader->loadFile("/Volumes/Macintosh/Work/Projects/F4BY/PX4Firmware/Images/f4by_APM.px4");
-    return;
+    bool isF4BY = true;
+    if(isF4BY)
+    {
+        m_px4uploader = new F4BYFirmwareUploader();
+
+        connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
+        connect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
+        connect(m_px4uploader,SIGNAL(flashProgress(qint64,qint64)),this,SLOT(px4firmwareDownloadProgress(qint64,qint64)));
+        connect(m_px4uploader,SIGNAL(error(QString)),this,SLOT(px4Error(QString)));
+        connect(m_px4uploader,SIGNAL(warning(QString)),this,SLOT(px4Warning(QString)));
+        connect(m_px4uploader,SIGNAL(done()),this,SLOT(px4Finished()));
+        connect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(px4requestDeviceReplug()));
+        connect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(px4devicePlugDetected()));
+
+        connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(px4firmwareUpdateCancelled()));
+        m_progressDialog->show();
+        m_progressDialog->setMaximum(100);
+        m_progressDialog->setValue(0);
+        m_px4uploader->loadFile("/Volumes/Work/neptune/Projects/F4BY/PX4Firmware/Images/f4by_APM.px4");
+        return;
+    }
+
 
     if (!ui->cmbSerialPort->isEnabled())
     {
@@ -550,12 +592,43 @@ void MainWindow::retryFirmwareDownload()
     this->m_progressDialog->startDownloads(this->m_currentFirmwareDownloads);
 }
 
+void MainWindow::px4Finished()
+{
+}
+
+void MainWindow::px4Error(QString /*error*/)
+{
+}
+
+void MainWindow::px4Warning(QString /*warning*/)
+{
+
+}
+
 void MainWindow::flashFirmware(QString filename)
 {
     if (!QFile::exists(filename)) {
         QMessageBox::critical(this, tr("FlashTool"), tr("Firmware not found."));
         return;
     }
+
+   /* bool isF4BY = true;
+    if(isF4BY)
+    {
+        F4BYFirmwareUploader* m_px4uploader = new F4BYFirmwareUploader();
+
+        connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
+        connect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
+        connect(m_px4uploader,SIGNAL(flashProgress(qint64,qint64)),this,SLOT(px4firmwareDownloadProgress(qint64,qint64)));
+        connect(m_px4uploader,SIGNAL(error(QString)),this,SLOT(px4Error(QString)));
+        connect(m_px4uploader,SIGNAL(warning(QString)),this,SLOT(px4Warning(QString)));
+        connect(m_px4uploader,SIGNAL(done()),this,SLOT(px4Finished()));
+        connect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(px4requestDeviceReplug()));
+        connect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(px4devicePlugDetected()));
+
+        m_px4uploader->loadFile(filename);
+        return;
+    }*/
 
     QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
     QStringList arguments;
