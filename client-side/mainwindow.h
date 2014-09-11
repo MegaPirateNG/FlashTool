@@ -104,6 +104,7 @@ private slots:
     void boardChanged(int index);
     void startFlash();
     void downloadFinishedFirmware(DownloadsList downloads);
+    void downloadProgressFirmware();
     void firmwareRequestDone(DownloadsList downloads);
     void canceledDownloadFirmware();
     void avrdudeReadStandardOutput();

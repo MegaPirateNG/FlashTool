@@ -38,6 +38,7 @@ class ProgressDialog : public QProgressDialog
 
 signals:
      void downloadsFinished(DownloadsList downloads);
+     void downloadProgress();
 
 public:
     explicit ProgressDialog();

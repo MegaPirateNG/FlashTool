@@ -33,9 +33,7 @@ void ProgressDialog::doUrlDownload(Download download)
 {
     QString userAgent = "FlashTool ";
     userAgent.append(FLASHTOOL_VERSION);
-    download.tries++;
-    this->setMaximum(100);
-    this->setValue(1);
+    this->reset();
     QNetworkRequest request;
     request.setUrl(download.uri);
     request.setRawHeader("User-Agent", userAgent.toLatin1());
@@ -92,6 +90,7 @@ void ProgressDialog::networkReplyFinished(QNetworkReply *networkReply)
 
 void ProgressDialog::networkReplyDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
+    emit downloadProgress();
     this->setMaximum(bytesTotal);
     this->setValue(bytesReceived);
     this->m_downloadRequestTimeout->stop();

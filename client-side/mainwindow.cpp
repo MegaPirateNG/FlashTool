@@ -467,7 +467,7 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
 
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(firmwareRequestDone(DownloadsList)));
 
-    this->m_progressDialog->setLabelText(tr("Waiting for firmware..."));
+    this->m_progressDialog->setLabelText(tr("Waiting for firmware"));
 
     QFile *file = new QFile(download.tmpFile);
     file->open(QIODevice::ReadOnly | QIODevice::Text);
@@ -514,29 +514,43 @@ void MainWindow::firmwareRequestDone(DownloadsList downloads)
         firmwareDownloads<<Download(this->m_globalsettings.hexurl + "/" + firmwareFile + ".md5");
 
         connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
-        this->m_progressDialog->startDownloads(firmwareDownloads);
+        connect(this->m_progressDialog, SIGNAL(downloadProgress()), this, SLOT(downloadProgressFirmware()));
+
+        this->m_currentFirmwareDownloads = firmwareDownloads;
+        this->m_retrydownloads->start(1000);
     }
+}
+
+void MainWindow::downloadProgressFirmware()
+{
+    this->m_progressDialog->setLabelText(tr("Downloading firmware"));
 }
 
 void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
 {
+    //Increase try count
+    downloads[0].tries++;
+
     Download download = downloads[0];
     Download downloadMd5 = downloads[1];
 
-    disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
-    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
-
     if (!download.success) {
+        int maxTries = 50;
+
         QFile::remove(download.tmpFile);
         QFile::remove(downloadMd5.tmpFile);
         this->m_currentFirmwareDownloads = downloads;
-        this->m_retrydownloads->start(10000);
-        QString dots = ".";
-        this->m_progressDialog->setLabelText(tr("Waiting for firmware") + dots.repeated(download.tries % 3));
-        if (download.tries > 30) {
+        this->m_progressDialog->setLabelText(tr("Waiting for firmware") + " " + QString::number(download.tries) + "/" + QString::number(maxTries));
+        if (download.tries > maxTries) {
             QMessageBox::critical(this, tr("FlashTool"), tr("Failed to download firmware, try again later."));
+        } else {
+            this->m_retrydownloads->start(10000);
         }
     } else {
+
+        disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+        disconnect(this->m_progressDialog, SIGNAL(downloadProgress()), this, SLOT(downloadProgressFirmware()));
+        disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
 
         this->m_progressDialog->hide();
 
@@ -586,22 +600,21 @@ void MainWindow::downloadFinishedFirmware(DownloadsList downloads)
 void MainWindow::retryFirmwareDownload()
 {
     this->m_retrydownloads->stop();
-    connect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
-    connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
     this->m_progressDialog->startDownloads(this->m_currentFirmwareDownloads);
 }
 
 void MainWindow::px4Finished()
 {
+    QMessageBox::information(this, tr("FlashTool"), tr("Firmware flashed successfully!"));
 }
 
-void MainWindow::px4Error(QString /*error*/)
+void MainWindow::px4Error(QString errorMsg)
 {
+    QMessageBox::critical(this, tr("FlashTool"), tr("An error occured while flashing: \n\n%1").arg(errorMsg));
 }
 
 void MainWindow::px4Warning(QString /*warning*/)
 {
-
 }
 
 void MainWindow::flashFirmware(QString filename)
@@ -759,7 +772,7 @@ void MainWindow::avrdudeError(QProcess::ProcessError error)
         break;
     }
 
-    QMessageBox::critical(this, tr("FlashTool"), tr("An error occured with avrdude: \n\n%1").arg(errorMsg));
+    QMessageBox::critical(this, tr("FlashTool"), tr("An error occured while flashing: \n\n%1").arg(errorMsg));
 }
 
 void MainWindow::avrdudeFinished(int exitCode)
@@ -794,8 +807,9 @@ void MainWindow::avrdudeReadStandardError()
 void MainWindow::canceledDownloadFirmware()
 {
     this->m_retrydownloads->stop();
-    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
     disconnect(this->m_progressDialog, SIGNAL(downloadsFinished(DownloadsList)), this, SLOT(downloadFinishedFirmware(DownloadsList)));
+    disconnect(this->m_progressDialog, SIGNAL(downloadProgress()), this, SLOT(downloadProgressFirmware()));
+    disconnect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledDownloadFirmware()));
     QMessageBox::critical(this, tr("FlashTool"), tr("You either canceled the firmware download or the download timed out."));
 }
 
