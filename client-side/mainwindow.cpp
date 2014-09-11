@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "F4BYFirmwareUploader.h"
 
+#include <QDesktopServices>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -91,6 +93,23 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
         //Settings
         if (xml.isStartElement() && (xml.name() == "settings")) {
             this->m_globalsettings.hexurl = xml.attributes().value("hexurl").toString().simplified();
+
+            if(xml.attributes().hasAttribute("flashToolVersion"))
+            {
+                QString remoteVersion = xml.attributes().value("flashToolVersion").toString().simplified();
+                if(remoteVersion != FLASHTOOL_VERSION)
+                {
+                    if(QMessageBox::Yes == QMessageBox::information(this, "Auto update", QString("New version %1 available.\n Do you want to visit site?").arg(remoteVersion), QMessageBox::Yes, QMessageBox::No))
+                    {
+                        QUrl url("http://www.megapirateng.com");
+                        if(xml.attributes().hasAttribute("flashToolURL"))
+                        {
+                            url = QUrl(xml.attributes().value("flashToolURL").toString().simplified());
+                        }
+                        QDesktopServices::openUrl(url);
+                    }
+                }
+            }
         }
 
         //Boards
