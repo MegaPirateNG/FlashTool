@@ -611,8 +611,8 @@ void MainWindow::flashFirmware(QString filename)
         return;
     }
 
-    if(m_isF4BY)
-    {
+    if (m_isF4BY) {
+
         m_px4uploader = new F4BYFirmwareUploader();
 
         connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
@@ -629,31 +629,33 @@ void MainWindow::flashFirmware(QString filename)
         m_progressDialog->setMaximum(100);
         m_progressDialog->setValue(0);
         m_px4uploader->loadFile(filename);
-        return;
+
+    } else {
+
+        QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
+        QStringList arguments;
+        arguments << "-C" + qApp->applicationDirPath() + "/external/avrdude.conf";
+        arguments << "-patmega2560";
+        arguments << "-cwiring";
+        arguments << "-P" + ui->cmbSerialPort->currentText();
+        arguments << "-b115200";
+        arguments << "-D";
+        arguments << "-Uflash:w:" + filename + ":i";
+
+        this->m_avrdudeOutput = ">" + program + " " + arguments.join(" ");
+        this->m_process = new QProcess;
+
+        connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
+        connect(this->m_process,SIGNAL(readyReadStandardOutput()),this, SLOT(avrdudeReadStandardOutput()));
+        connect(this->m_process,SIGNAL(readyReadStandardError()),this, SLOT(avrdudeReadStandardError()));
+        connect(this->m_process,SIGNAL(finished(int)),this, SLOT(avrdudeFinished(int)));
+        connect(this->m_process,SIGNAL(error(QProcess::ProcessError)),this, SLOT(avrdudeError(QProcess::ProcessError)));
+
+        this->m_progressDialog->show();
+        this->m_progressDialog->setLabelText(tr("Starting flashing process..."));
+        this->m_process->start(program, arguments);
+
     }
-
-    QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
-    QStringList arguments;
-    arguments << "-C" + qApp->applicationDirPath() + "/external/avrdude.conf";
-    arguments << "-patmega2560";
-    arguments << "-cwiring";
-    arguments << "-P" + ui->cmbSerialPort->currentText();
-    arguments << "-b115200";
-    arguments << "-D";
-    arguments << "-Uflash:w:" + filename + ":i";
-
-    this->m_avrdudeOutput = ">" + program + " " + arguments.join(" ");
-    this->m_process = new QProcess;
-
-    connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(canceledFirmwareUpload()));
-    connect(this->m_process,SIGNAL(readyReadStandardOutput()),this, SLOT(avrdudeReadStandardOutput()));
-    connect(this->m_process,SIGNAL(readyReadStandardError()),this, SLOT(avrdudeReadStandardError()));
-    connect(this->m_process,SIGNAL(finished(int)),this, SLOT(avrdudeFinished(int)));
-    connect(this->m_process,SIGNAL(error(QProcess::ProcessError)),this, SLOT(avrdudeError(QProcess::ProcessError)));
-
-    this->m_progressDialog->show();
-    this->m_progressDialog->setLabelText(tr("Starting flashing process..."));
-    this->m_process->start(program, arguments);
 }
 
 
