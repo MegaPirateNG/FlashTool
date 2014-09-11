@@ -39,31 +39,41 @@ process.on('message', function(payload) {
             }
         },
         function cloned(status) {
-            git.checkout('origin/'+payload.config.version['src-version'], payload.path, this);
+            git.checkout(payload.config.version['src-version'], payload.path, this);
         },
         function prepareMakeFile(status) {
             var makeConfig = '#Config\n' +
             'BOARD = mega2560\n' +
             'HAL_BOARD ?= HAL_BOARD_MPNG\n' +
             'PORT = /dev/ttyACM0\n' +
-            'BUILDROOT = ' + payload.path + '/_build' + '\n' +
-            'EXTRAFLAGS += -DTHISFIRMWARE="\\"' + payload.config.version['src-dir'] + ' ' + payload.config.version['number'] + ' (' + payload.commit.substr(0, 7) + ')\\""\n';
+            'PX4_ROOT=../PX4Firmware\n'+
+						'NUTTX_SRC=../PX4NuttX/nuttx\n';
             for (var name in payload.config) {
                 if (payload.config[name]['src-flags']) {
                     makeConfig += '#' + name + '\n';
                     makeConfig += 'EXTRAFLAGS += -D' + payload.config[name]['src-flags'] +'\n';
                 }
             }
+            if (payload.config.version['make'] === 'mpng') {
+	            makeConfig += 'EXTRAFLAGS += -DTHISFIRMWARE="\\"' + payload.config.version['src-dir'] + ' ' + payload.config.version['number'] + ' (' + payload.commit.substr(0, 7) + ')\\""\n';
+            	makeConfig += 'BUILDROOT = ' + payload.path + '/_build' + '\n';
+            }
+            
             fs.writeFile(payload.path + '/config.mk', makeConfig, this);
         },
         function build(status) {
             process.send({msg: 'Build: '+payload.path + '/' + payload.config.version['src-dir']});
-            exec('cd ' + payload.path + '/' + payload.config.version['src-dir'] + '; make mpng', this);
+            exec('cd ' + payload.path + '/' + payload.config.version['src-dir'] + '; make '+payload.config.version['make']+' > compile.log 2>&1', this);
         },
         function copyHex(error, stdout, stderror) {
             process.send({msg: 'Copy HEX'});
-            var srcHex = payload.path + '/_build/' + payload.config.version['src-dir'] + '.hex',
-                dstHex = payload.hexFile;
+            var srcHex = '';
+            if (payload.config.version['make'] === 'f4by') {
+            	srcHex = payload.path + '/../PX4Firmware/Images/f4by_APM.px4';
+            } else {
+            	srcHex = payload.path + '/_build/' + payload.config.version['src-dir'] + '.hex';
+            }
+            var dstHex = payload.hexFile;
             process.send({msg: 'Copy HEX from:'+srcHex +'  TO:'+dstHex});
             fs.copy(srcHex, dstHex, this);
         },

@@ -1,5 +1,5 @@
 <xml>
-	<settings hexurl="http://fw.megapirateng.com:8888/hex" flashToolVersion="1.1"/>
+	<settings hexurl="http://fw.megapirateng.com:8888/hex" flashToolVersion="1.1" flashToolURL="https://github.com/MegaPirateNG/FlashTool/releases"/>
 	
 	<boards>
 		<board name="RCTimer CRIUS V2" id="crius2" src-flags="MPNG_BOARD_TYPE=RCTIMER_CRIUS_V2"/>
@@ -8,7 +8,7 @@
 		<board name="BlackVortex" id="blackvortex" src-flags="MPNG_BOARD_TYPE=BLACK_VORTEX"/>
 		<board name="MultiWii Pro EZ3 Black" id="ez3black" src-flags="MPNG_BOARD_TYPE=MULTIWII_PRO_EZ3_BLACK"/>
 		<board name="PARIS v5 Mega iOSD" id="parisv5" src-flags="MPNG_BOARD_TYPE=PARIS_V5_OSD"/>
-		<board name="F4BY (32 bit)" showInputs="0" showGPS="0" useBootloader="1" id="f4by" src-flags="MPNG_BOARD_TYPE=F4BY"/>
+		<board name="F4BY (32 bit)" showInputs="0" showGPS="0"  id="f4by" src-flags="MPNG_BOARD_TYPE=F4BY"/>
 	</boards>
 
 	<rcinputs>
@@ -46,17 +46,19 @@
 		<gpstype name="HIL" id="hil" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_HIL"/>
 		<gpstype name="MTK19" id="mtk19" src-flags="GPS_PROTOCOL=GPS_PROTOCOL_MTK19"/>
 
+		<gpsbaud name="9600" id="9600" src-flags="SERIAL2_BAUD=9600"/>
+		<gpsbaud name="19200" id="19200" src-flags="SERIAL2_BAUD=9600"/>
 		<gpsbaud name="38400" id="38400" src-flags="SERIAL2_BAUD=38400"/>
 		<gpsbaud name="57600" id="57600" src-flags="SERIAL2_BAUD=57600"/>
 		<gpsbaud name="115200" id="115200" src-flags="SERIAL2_BAUD=115200"/>
 	</gps>
 
 	<versions>
-	    <version platform="copter" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="3.0.1-R4" id="3.0.1-rc4" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduCopter"/>
-	    <version platform="plane" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="2.76" id="2.76" src-path="/home/builder/smurfy" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.76" src-dir="ArduPlane"/>
-	    <version platform="plane" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="2.74b R4 Beta " id="2.74R3b" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduPlane"/>
-	    <version platform="copter" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="3.1.5-R2 Beta!!!" id="3.1.5-R2" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.1.5-R2" src-dir="ArduCopter"/>
-	    <version platform="copter" boards="f4by" number="3.2" id="3.2" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="3.2" src-dir="ArduCopter"/>
+		<version platform="copter" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="3.0.1-R4" id="3.0.1-rc4" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduCopter" make="mpng"/>
+	  <version platform="plane" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="2.76" id="2.76" src-path="/home/builder/smurfy" src-repository="https://github.com/smurfy/ardupilot-mpng.git" src-version="mpng_ArduPlane-2.76" src-dir="ArduPlane" make="mpng"/>
+	  <version platform="plane" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="2.74b R4 Beta " id="2.74R3b" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.0.1-r4" src-dir="ArduPlane" make="mpng"/>
+	  <version platform="copter" boards="crius2,crius1,hk_red,blackvortex,ez3black,parisv5" number="3.1.5-R2 Beta!!!" id="3.1.5-R2" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="mpng-3.1.5-R2" src-dir="ArduCopter" make="mpng"/>
+	  <version platform="copter" boards="f4by" number="F4BY-3.2" id="F4BY-3.2" src-path="/home/builder/mpng" src-repository="https://github.com/MegaPirateNG/ardupilot-mpng.git" src-version="F4BY-AC-3.2" src-dir="ArduCopter" make="f4by"/>
 	</versions>
 
 </xml>
