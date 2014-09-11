@@ -127,7 +127,7 @@ int F4BYFirmwareUploader::readBytes(int num,int timeout,QByteArray &buf)
 
 bool F4BYFirmwareUploader::rebootBoard(const QString &portName)
 {
-    std::auto_ptr<QSerialPort> serialPort(new QSerialPort());
+    QSharedPointer<QSerialPort> serialPort = QSharedPointer<QSerialPort>(new QSerialPort());
     msleep(500);
     serialPort->setPortName(portName);
     if(!serialPort->open(QIODevice::ReadWrite))
