@@ -374,7 +374,7 @@ void MainWindow::px4firmwareDownloadProgress(qint64 cur, qint64 all)
 
 void MainWindow::px4requestDeviceReplug()
 {
-    m_progressDialog->setLabelText("Please unplug, and plug back in the F4BY");
+    m_progressDialog->setLabelText(tr("Please unplug, and plug back in the F4BY"));
     m_progressDialog->show();
 }
 
@@ -610,7 +610,7 @@ void MainWindow::px4Finished()
 
 void MainWindow::px4Error(QString errorMsg)
 {
-    QMessageBox::critical(this, tr("FlashTool"), tr("An error occured while flashing: \n\n%1").arg(errorMsg));
+    QMessageBox::critical(this, tr("FlashTool"), tr("An error occurred while flashing: \n\n%1").arg(errorMsg));
 }
 
 void MainWindow::px4Warning(QString /*warning*/)
