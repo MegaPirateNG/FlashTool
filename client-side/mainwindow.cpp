@@ -308,7 +308,7 @@ void MainWindow::platformChanged(int index)
     QString oldVersion = this->m_settings.value("Version").toString();
     int oldVersionIndex = 0;
 
-    BoardType boardType = ui->cmbBoardType->currentData().value<BoardType>();
+    BoardType boardType = ui->cmbBoardType->itemData(ui->cmbBoardType->currentIndex()).value<BoardType>();
 
     Platform platform = ui->cmbPlatform->itemData(index).value<Platform>();
     ui->lblImage->setStyleSheet("background: transparent url(:/images/resources/" + platform.image + ") center 0 no-repeat;");
@@ -324,7 +324,7 @@ void MainWindow::platformChanged(int index)
                 if(version.boards.indexOf(boardType.id) != -1)
                 {
                     if (version.id == oldVersion) {
-                    oldVersionIndex = ui->cmbVersion->count();
+                        oldVersionIndex = ui->cmbVersion->count();
                     }
                     QVariant vVersion;
                     vVersion.setValue<Version>(version);
