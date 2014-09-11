@@ -5,7 +5,8 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_px4uploader(0)
+    m_px4uploader(0),
+    m_isF4BY(false)
 {
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
@@ -342,6 +343,8 @@ void MainWindow::boardChanged(int index)
     ui->cmbRCType->setEnabled(boardType.showInputs);
     ui->cmbRCMapping->setEnabled(boardType.showInputs);
 
+    m_isF4BY = (boardType.id == "f4by");
+
 }
 
 void MainWindow::px4firmwareDownloadProgress(qint64 cur, qint64 all)
@@ -398,29 +401,6 @@ void MainWindow::px4firmwareUpdateCancelled()
 
 void MainWindow::startFlash()
 {
-    bool isF4BY = true;
-    if(isF4BY)
-    {
-        m_px4uploader = new F4BYFirmwareUploader();
-
-        connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
-        connect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
-        connect(m_px4uploader,SIGNAL(flashProgress(qint64,qint64)),this,SLOT(px4firmwareDownloadProgress(qint64,qint64)));
-        connect(m_px4uploader,SIGNAL(error(QString)),this,SLOT(px4Error(QString)));
-        connect(m_px4uploader,SIGNAL(warning(QString)),this,SLOT(px4Warning(QString)));
-        connect(m_px4uploader,SIGNAL(done()),this,SLOT(px4Finished()));
-        connect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(px4requestDeviceReplug()));
-        connect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(px4devicePlugDetected()));
-
-        connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(px4firmwareUpdateCancelled()));
-        m_progressDialog->show();
-        m_progressDialog->setMaximum(100);
-        m_progressDialog->setValue(0);
-        m_px4uploader->loadFile("/Volumes/Work/neptune/Projects/F4BY/PX4Firmware/Images/f4by_APM.px4");
-        return;
-    }
-
-
     if (!ui->cmbSerialPort->isEnabled())
     {
         QMessageBox::critical(this, tr("FlashTool"), tr("No serial port found, please make sure you connected your board via usb."));
@@ -612,10 +592,9 @@ void MainWindow::flashFirmware(QString filename)
         return;
     }
 
-   /* bool isF4BY = true;
-    if(isF4BY)
+    if(m_isF4BY)
     {
-        F4BYFirmwareUploader* m_px4uploader = new F4BYFirmwareUploader();
+        m_px4uploader = new F4BYFirmwareUploader();
 
         connect(m_px4uploader,SIGNAL(statusUpdate(QString)),this,SLOT(px4StatusUpdate(QString)));
         connect(m_px4uploader,SIGNAL(finished()),this,SLOT(px4Terminated()));
@@ -626,9 +605,13 @@ void MainWindow::flashFirmware(QString filename)
         connect(m_px4uploader,SIGNAL(requestDevicePlug()),this,SLOT(px4requestDeviceReplug()));
         connect(m_px4uploader,SIGNAL(devicePlugDetected()),this,SLOT(px4devicePlugDetected()));
 
+        connect(this->m_progressDialog, SIGNAL(canceled()), this, SLOT(px4firmwareUpdateCancelled()));
+        m_progressDialog->show();
+        m_progressDialog->setMaximum(100);
+        m_progressDialog->setValue(0);
         m_px4uploader->loadFile(filename);
         return;
-    }*/
+    }
 
     QString program = qApp->applicationDirPath() + "/external/avrdude.exe";
     QStringList arguments;

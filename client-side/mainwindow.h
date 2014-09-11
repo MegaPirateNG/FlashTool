@@ -138,6 +138,7 @@ private:
     QString m_firmwareDirectoryName;
     AboutDialog *m_aboutDlg;
     F4BYFirmwareUploader* m_px4uploader;
+    bool m_isF4BY;
 
     void flashFirmware(QString filename);
     void parseAvrdudeOutput();

@@ -10,7 +10,7 @@ TARGET = flashTool
 TEMPLATE = app
 LIBS += -lz
 
-FLASHTOOL_PATH_URI = http://localhost:8000/update.xml
+FLASHTOOL_PATH_URI = http://fw.megapirateng.com:8888/update.xml
 FLASHTOOL_VERSION = 1.1
 
 DEFINES += FLASHTOOL_PATH_URI=\\\"$$FLASHTOOL_PATH_URI\\\"
