@@ -1,5 +1,5 @@
 <xml>
-	<settings hexurl="http://fw.megapirateng.com:8888/hex" flashToolVersion="1.1" flashToolURL="https://github.com/MegaPirateNG/FlashTool/releases"/>
+	<settings hexurl="http://fw.megapirateng.com:8888/hex" flashToolVersion="1.1r2" flashToolURL="https://github.com/MegaPirateNG/FlashTool/releases"/>
 	
 	<boards>
 		<board name="RCTimer CRIUS V2" id="crius2" src-flags="MPNG_BOARD_TYPE=RCTIMER_CRIUS_V2"/>
