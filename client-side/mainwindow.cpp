@@ -99,7 +99,7 @@ void MainWindow::downloadFinishedConfigs(DownloadsList downloads)
                 QString remoteVersion = xml.attributes().value("flashToolVersion").toString().simplified();
                 if(remoteVersion != FLASHTOOL_VERSION)
                 {
-                    if(QMessageBox::Yes == QMessageBox::information(this, "Auto update", QString("New version %1 available.\n Do you want to visit site?").arg(remoteVersion), QMessageBox::Yes, QMessageBox::No))
+                    if(QMessageBox::Yes == QMessageBox::information(this, tr("Auto update"), tr("New version %1 available.\nDo you want to visit site?").arg(remoteVersion), QMessageBox::Yes, QMessageBox::No))
                     {
                         QUrl url("http://www.megapirateng.com");
                         if(xml.attributes().hasAttribute("flashToolURL"))
