@@ -10,6 +10,8 @@ TARGET = flashTool
 TEMPLATE = app
 LIBS += -lz
 
+ICON = resources/logo.icns
+
 FLASHTOOL_PATH_URI = http://fw.megapirateng.com:8888/update.xml
 FLASHTOOL_VERSION = 1.1r2
 
