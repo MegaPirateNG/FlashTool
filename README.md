@@ -4,8 +4,8 @@ MegaPirateNG - FlashTool and Build-Server
 FlashTool
 ---------
 
-You need Qt 5.1 SDK to compile.
-Should compile on Windows, MacOSX and Linux, but currently only tested on Windows (and avrdude.exe is currently hardcoded)
+You need Qt 5.1 SDK or higher to compile.
+Does compile on Windows, MacOSX and Linux, but currently only tested on Windows and MacOSX (and avrdude.exe is currently hardcoded but a Windows and MacOSX Version is provided)
 ```FLASHTOOL_PATH_URI``` needs to be changed to correct build server url.
 
 Build-Server
