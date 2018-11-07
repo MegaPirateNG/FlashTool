@@ -12,7 +12,7 @@ LIBS += -lz
 
 ICON = resources/logo.icns
 
-FLASHTOOL_PATH_URI = http://mpng.siralex.info:8888/update.xml
+FLASHTOOL_PATH_URI = http://127.0.0.1:8888/update.xml
 FLASHTOOL_VERSION = 1.1r3
 
 DEFINES += FLASHTOOL_PATH_URI=\\\"$$FLASHTOOL_PATH_URI\\\"

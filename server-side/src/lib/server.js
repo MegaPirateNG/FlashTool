@@ -1,5 +1,4 @@
 var express = require('express'),
-    utils = require('express/node_modules/connect/lib/utils'),
     xml2js = require('xml2js'),
     parser = new xml2js.Parser({explicitArray: false, mergeAttrs: true, explicitRoot: false});
 
@@ -11,7 +10,7 @@ var xmlBodyParser = function(req, res, next) {
     if ('GET' == req.method || 'HEAD' == req.method) return next();
 
     // check Content-Type
-    if ('text/xml' != utils.mime(req)) return next();
+    if ('text/xml' != req.header('content-type')) return next();
 
     // flag as parsed
     req._body = true;

@@ -1,9 +1,9 @@
 #include "F4BYFirmwareUploader.h"
 #include "qserialportinfo.h"
-#ifndef Q_OS_WIN
+#ifdef Q_OS_LINUX
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
-#endif //Q_OS_WIN
+#endif //Q_OS_LINUX
 #include <QProcess>
 #include <QApplication>
 #include <memory>
